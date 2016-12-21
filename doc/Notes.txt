@@ -1,0 +1,32 @@
+
+
+
+source code: source/blender/gpu
+
+Initialisation:
+---------------
+
+Shader code ist flexibel anpassbar durch Setzen von Defines. 
+Ein Shader wird zur Laufzeit Konfiguriert, indem an den 
+Anfang des GLSL codes die Defines hinzugefügt werden, 
+bevor er vom Grafikkartentreiber übersetzt wird.
+
+Der GLSL-Code für alle Shader ist verfügbar, wird aber 
+zur Compilezeit (unter Verwendung von DataToC) in eine 
+Character-Sequenz (char[]) gewandelt und als Header-Datei 
+zum C-Code hinzugefügt.
+
+Ein Shader aus der Datei
+   gpu_shader_basic_vert.glsl 
+wird dadurch zu zu einem char[] mit dem Bezeichner 
+   datatoc_gpu_shader_basic_vert_glsl
+
+
+Basic Rendering
+---------------
+
+Basic Rendering verwendet zwei bis drei Shader:
+
+1. gpu_shader_basic_vert.glsl
+2. gpu_shader_basic_frag.glsl
+3. gpu_shader_basic_geom.glsl (optional)
