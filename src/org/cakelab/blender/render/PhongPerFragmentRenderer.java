@@ -1,6 +1,5 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 import java.io.File;
@@ -8,22 +7,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.Lamp;
-import org.cakelab.oge.RenderAssets;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.blender.render.data.BRLightRenderData;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.LightSource;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 
 
-public class PhongPerFragmentRenderer extends Renderer {
+public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	private int uniform_diffuse_color;
 	private int uniform_specular_color;
 	private int uniform_light_pos;
@@ -60,13 +59,13 @@ public class PhongPerFragmentRenderer extends Renderer {
 
 	
 	@Override
-	public void prepareRenderPass(GraphicContext context, double currentTime) {
+	public void prepareRenderPass(ApplicationContext context, double currentTime) {
 		// TODO support multiple light sources
-		ArrayList<Lamp> activeLamps = context.getActiveLamps();
-		Lamp light = activeLamps.get(0);
+		ArrayList<LightSource> activeLamps = context.getActiveLamps();
+		LightSource light = activeLamps.get(0);
 		Vector3f light_color = light.getColor();
 		
-		BRLampRenderData lampRenderData = (BRLampRenderData) light.getRenderData();
+		BRLightRenderData lampRenderData = (BRLightRenderData) light.getRenderData();
 		Vector4f light_pos = lampRenderData.getViewSpacePosition();
 
 		glUniform3f(uniform_light_pos, light_pos.x, light_pos.y, light_pos.z);
@@ -76,18 +75,15 @@ public class PhongPerFragmentRenderer extends Renderer {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject vobj) {
-		Generic3DObject o = (Generic3DObject) vobj;
-		RenderAssets assets = o.getRenderAssets();
-
+	public void draw(double currentTime, VisualObject o) {
+		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 		assets.bind();
 		// TODO mix material color with light color
 		// TODO mix material specular with light color?
-
-		Vector4f basecolor = o.getBaseColor();
+		Vector4f basecolor = o.getMaterial().getColor();
 		glUniform3f(uniform_diffuse_color, basecolor.x, basecolor.y, basecolor.z);
-
-		glDrawArrays(assets.getDrawingMethod(), 0, assets.getNumVertices());
+		
+		assets.draw();
 	}
 
 	@Override

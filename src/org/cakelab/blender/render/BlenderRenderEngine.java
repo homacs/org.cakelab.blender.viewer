@@ -5,21 +5,26 @@ import static org.lwjgl.opengl.GL15.*;
 
 import java.io.IOException;
 
-import org.cakelab.blender.io.Generic3DMaterial;
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.blender.io.Generic3DRenderAssets;
-import org.cakelab.blender.io.Generic3DTextureImage;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.Lamp;
+import org.cakelab.appbase.log.Log;
+import org.cakelab.blender.render.data.BRLightRenderData;
+import org.cakelab.blender.render.data.BRMeshRenderData;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.blender.render.data.BRTextureRenderData;
 import org.cakelab.oge.RenderEngine;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.Scene;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.oge.app.ApplicationContext;
 import org.cakelab.oge.opengl.VertexArrayObject;
+import org.cakelab.oge.scene.Material;
+import org.cakelab.oge.scene.TextureImage;
+import org.cakelab.oge.scene.LightSource;
+import org.cakelab.oge.scene.Scene;
+import org.cakelab.oge.scene.VisualMeshObject;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.texture.GPUTexture;
 import org.cakelab.oge.texture.TextureImageIO;
 import org.cakelab.oge.utils.BufferedMatrix4f;
+import org.cakelab.oge.utils.GLAPIHelper;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.cakelab.soapbox.model.Mesh;
 import org.lwjgl.opengl.GL11;
 
@@ -33,6 +38,7 @@ public class BlenderRenderEngine implements RenderEngine {
 	private BufferedMatrix4f projection = new BufferedMatrix4f();
 	private SimpleBaseColorTexRenderer simpleBaseColorTexRenderer;
 	private SimpleBaseColorRenderer simpleBaseColorRenderer;
+	@SuppressWarnings("unused")
 	private PhongPerVertexRenderer phongPerVertexRenderer;
 	private PhongPerFragmentRenderer phongPerFragmentRenderer;
 	private PhongTexPerFragmentRenderer phongTexPerFragmentRenderer;
@@ -58,19 +64,23 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		for (VisualObject ob : scene.getVisualObjects()) {
 			try {
-				setup(ob);
+				if (!(ob instanceof VisualMeshObject)) {
+					Log.warn("Renderer has no proper method to render objects without a mesh");
+				} else {
+					setup((VisualMeshObject)ob);
+				}
 			} catch (IOException e) {
 				throw new GLException(e);
 			}
 		}
 		
-		for (Lamp lamp : scene.getLamps()) {
+		for (LightSource lamp : scene.getLightSources()) {
 			setupLamp(lamp);
 		}
 	}
 
-	private void setupLamp(Lamp lamp) {
-		BRLampRenderData renderData = new BRLampRenderData(lamp);
+	private void setupLamp(LightSource lamp) {
+		BRLightRenderData renderData = new BRLightRenderData(lamp);
 		lamp.setRenderData(renderData);
 	}
 
@@ -88,28 +98,13 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 	}
 
-	private void setup(VisualObject ob) throws GLException, IOException {
-		Generic3DObject gob = (Generic3DObject) ob;
+	private void setup(VisualMeshObject gob) throws GLException, IOException {
 		
-		Generic3DRenderAssets renderAssets = (Generic3DRenderAssets) gob.getRenderAssets();
-		
-		Renderer renderer = setupAssets(renderAssets);
-		
-		
-		BRObjectRenderData renderData = new BRObjectRenderData();
-		
-		// TODO select renderer based on object information
-		renderData.setRenderer(renderer);
-		gob.setRenderData(renderData);
-	}
-
-	private Renderer setupAssets(Generic3DRenderAssets renderAssets) throws IOException {
-		Generic3DMaterial material = renderAssets.getMaterial();
-		
-		Mesh mesh = renderAssets.getMesh();
+		Mesh mesh = gob.getMesh();
+		Material material = gob.getMaterial();
 		VertexArrayObject vao = new VertexArrayObject(mesh, VERTEX_ATTRIBUTE_COORDS, GL_STATIC_DRAW);
-		Generic3DTextureImage textureImage = material.getColorTexture();
-		Renderer renderer;
+		TextureImage textureImage = material.getColorTexture();
+		SingleProgramRendererBase renderer;
 		if (textureImage != null && mesh.hasUVCoordinates()) {
 			
 			/*
@@ -125,13 +120,13 @@ public class BlenderRenderEngine implements RenderEngine {
 			BRTextureRenderData renderData = new BRTextureRenderData(gpuTexture);
 			textureImage.setRenderData(renderData);
 			
-			if (material.isEmitter()) {
+			if (material.isLightEmitting()) {
 				renderer = simpleBaseColorTexRenderer;
 			} else {
 				renderer = phongTexPerFragmentRenderer;
 			}
 		} else {
-			if (material.isEmitter()) {
+			if (material.isLightEmitting()) {
 				renderer = simpleBaseColorRenderer;
 			} else {
 				renderer = phongPerFragmentRenderer;
@@ -148,11 +143,14 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		mesh.setRenderData(new BRMeshRenderData(vao));
 		
+		BRObjectRenderData renderAssets = new BRObjectRenderData(mesh, material);
 		
-		return renderer;
+		renderAssets.setRenderer(renderer);
+		gob.setRenderData(renderAssets);
+		
 	}
 
-	private GPUTexture createGPUTexture(Generic3DTextureImage image) throws IOException {
+	private GPUTexture createGPUTexture(TextureImage image) throws IOException {
 		return new TextureImageIO(image.getImage(), 
 				image.getPixelFormat(), image.isFlipped(), false, GL11.GL_NEAREST, GL11.GL_NEAREST);
 	}
@@ -164,19 +162,22 @@ public class BlenderRenderEngine implements RenderEngine {
 	}
 
 	@Override
-	public void render(GraphicContext context, double currentTime, Scene scene) {
-		
+	public void render(ApplicationContext context, double currentTime, Scene scene) {
+		glViewport(0, 0, context.getWindowWidth(), context.getWindowHeight());
+		GLAPIHelper.glClearBuffer4f(GL_COLOR, 0, 0.5f, 0.5f, 0.5f, 1.0f);
+		GLAPIHelper.glClearBuffer1f(GL_DEPTH, 0, 1f);
+
 		context.setProjectionTransform(projection);
 
-		for (Lamp lamp : context.getActiveLamps()) {
-			BRLampRenderData renderData = (BRLampRenderData) lamp.getRenderData();
+		for (LightSource lamp : context.getActiveLamps()) {
+			BRLightRenderData renderData = (BRLightRenderData) lamp.getRenderData();
 			renderData.update(context, currentTime);
 		}
 		
-		Renderer previousRenderer = null;
+		SingleProgramRendererBase previousRenderer = null;
 		for (VisualObject vobj : scene.getVisualObjects()) {
 			BRObjectRenderData renderData = (BRObjectRenderData) vobj.getRenderData();
-			Renderer renderer = renderData.getRenderer();
+			SingleProgramRendererBase renderer = renderData.getRenderer();
 			if (renderer != previousRenderer) {
 				// XXX remove hack
 				currentTime++;
@@ -188,7 +189,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		if (renderNormals) {
 			for (VisualObject vobj : scene.getVisualObjects()) {
-				Renderer renderer = normalRenderer;
+				SingleProgramRendererBase renderer = normalRenderer;
 				renderer.prepare(context, currentTime);
 				renderer.render(context, currentTime, vobj);
 			}

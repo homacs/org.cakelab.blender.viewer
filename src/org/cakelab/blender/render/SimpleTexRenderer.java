@@ -1,23 +1,21 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.glDrawArrays;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.RenderAssets;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 
 
 
-public class SimpleTexRenderer extends Renderer {
+public class SimpleTexRenderer extends SingleProgramRendererBase {
 	public SimpleTexRenderer() throws GLException, IOException {
 		loadShaders();
 		
@@ -41,18 +39,14 @@ public class SimpleTexRenderer extends Renderer {
 
 	
 	@Override
-	public void prepareRenderPass(GraphicContext context, double currentTime) {
+	public void prepareRenderPass(ApplicationContext context, double currentTime) {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject vobj) {
-		Generic3DObject o = (Generic3DObject) vobj;
-		RenderAssets assets = o.getRenderAssets();
-
-		// not the fastest method of course ..
+	public void draw(double currentTime, VisualObject o) {
+		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 		assets.bind();
-		
-		glDrawArrays(assets.getDrawingMethod(), 0, assets.getNumVertices());
+		assets.draw();
 	}
 
 

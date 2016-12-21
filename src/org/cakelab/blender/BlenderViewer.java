@@ -8,14 +8,15 @@ import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.io.BlenderIO;
 import org.cakelab.blender.render.BlenderRenderEngine;
 import org.cakelab.oge.Camera;
-import org.cakelab.oge.GraphicContext;
 import org.cakelab.oge.RenderEngine;
-import org.cakelab.oge.Scene;
-import org.cakelab.soapbox.DynamicObject;
+import org.cakelab.oge.app.ApplicationBase;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.DynamicObject;
+import org.cakelab.oge.scene.Scene;
 import org.cakelab.soapbox.Player;
 import org.lwjgl.glfw.GLFW;
 
-public class BlenderViewer extends BlenderApplicationBase {
+public class BlenderViewer extends ApplicationBase {
 	private RenderEngine engine;
 	private Scene scene;
 	private Player player;
@@ -32,12 +33,12 @@ public class BlenderViewer extends BlenderApplicationBase {
 		info.flags.fullscreen = true;
 		info.flags.vsync = false;
 		player = new Player();
-		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
+//		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
 //		String filename = "resources/suzanne.blend";
 //		String filename = "resources/suzanne-scene.blend";
 //		String filename = "resources/cube.blend";
 //		String filename = "resources/common-can+mat.blend";
-//		String filename = "resources/xyz-scene.blend";
+		String filename = "resources/xyz-scene.blend";
 //		String filename = "resources/simple-cube.blend";
 		BlenderIO io = new BlenderIO(new File(filename));
 		scene = io.loadScene();
@@ -57,15 +58,15 @@ public class BlenderViewer extends BlenderApplicationBase {
 	}
 
 	@Override
-	protected void render(double currentTime, GraphicContext gcontext) throws Throwable {
+	public void process(double currentTime, ApplicationContext context) throws Throwable {
 		player.update(currentTime);
 		
 		for (DynamicObject vobj : scene.getDynamicObjects()) {
 			vobj.update(currentTime);
 		}
 		context.setActiveCamera(player.getCamera());
-		context.setActiveLamps(scene.getLamps());
-		engine.render(gcontext, currentTime, scene);
+		context.setActiveLamps(scene.getLightSources());
+		engine.render(context, currentTime, scene);
 
 	}
 
@@ -113,12 +114,16 @@ public class BlenderViewer extends BlenderApplicationBase {
 	            case GLFW.GLFW_KEY_RIGHT_CONTROL:
 	            	player.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 0.5f : 1.0f));
 	            	break;
+	            case GLFW.GLFW_KEY_ESCAPE:
+	            	requestExit(0);
+	            	break;
 	            default:
 	                break;
 	        }
 	    }
 
 	}
+
 
 	@Override
 	protected synchronized void onMouseMove(double xpos, double ypos, double xmov, double ymov) {

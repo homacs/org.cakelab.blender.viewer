@@ -1,8 +1,9 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.data;
 
+import org.cakelab.oge.scene.ModuleData;
 import org.cakelab.oge.texture.GPUTexture;
 
-public class BRTextureRenderData implements TextureRenderData {
+public class BRTextureRenderData implements ModuleData {
 
 	private GPUTexture gpuTexture;
 
@@ -10,9 +11,12 @@ public class BRTextureRenderData implements TextureRenderData {
 		this.gpuTexture = gpuTexture;
 	}
 
-	@Override
 	public void bind() {
 		gpuTexture.bind();
+	}
+
+	public void delete() {
+		gpuTexture.delete();
 	}
 
 }

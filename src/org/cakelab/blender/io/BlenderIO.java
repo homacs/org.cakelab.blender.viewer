@@ -31,7 +31,9 @@ import org.blender.utils.MainLib;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
 import org.cakelab.blender.utils.BlenderSceneIterator;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.oge.scene.TextureImage;
+import org.cakelab.oge.scene.VisualMeshObject;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
 import org.cakelab.soapbox.model.QuadMesh;
 import org.cakelab.soapbox.model.TriangleMesh;
@@ -64,8 +66,8 @@ public class BlenderIO {
 		return cameras;
 	}
 
-	public org.cakelab.oge.Scene loadScene() throws IOException {
-		org.cakelab.oge.Scene scene = new org.cakelab.oge.Scene();
+	public org.cakelab.oge.scene.Scene loadScene() throws IOException {
+		org.cakelab.oge.scene.Scene scene = new org.cakelab.oge.scene.Scene();
 		Scene bscene = main.getScene();
 		BlenderSceneIterator base_it = new BlenderSceneIterator(bscene);
 		while (base_it.hasNext()) {
@@ -77,7 +79,7 @@ public class BlenderIO {
 				cameras.add(loadCamera(ob));
 				break;
 			case OB_LAMP:
-				scene.addLamp(loadLamp(ob));
+				scene.addLightSource(loadLamp(ob));
 				break;
 			case OB_MESH:
 				scene.add(loadMesh(ob));
@@ -88,10 +90,10 @@ public class BlenderIO {
 		return scene;
 	}
 	
-	private org.cakelab.oge.Lamp loadLamp(BlenderObject ob) throws IOException {
+	private org.cakelab.oge.scene.LightSource loadLamp(BlenderObject ob) throws IOException {
 		Lamp l = ob.getData().cast(Lamp.class).get();
 		Vector3f rgb = new Vector3f(l.getR(), l.getG(), l.getB());
-		org.cakelab.oge.Lamp lamp = new org.cakelab.oge.Lamp(rgb);
+		org.cakelab.oge.scene.LightSource lamp = new org.cakelab.oge.scene.LightSource(rgb);
 		setPose(lamp, ob);
 		return lamp;
 	}
@@ -105,7 +107,7 @@ public class BlenderIO {
 		return camera;
 	}
 
-	private void setPose(org.cakelab.oge.Pose camera, BlenderObject ob) throws IOException {
+	private void setPose(org.cakelab.oge.scene.Pose camera, BlenderObject ob) throws IOException {
 		float[] tmp = new float[3];
 		ob.getLoc().toArray(tmp, 0, 3);
 		convertVector(tmp, 0);
@@ -124,13 +126,13 @@ public class BlenderIO {
 
 	private VisualObject loadMesh(BlenderObject ob) throws IOException {
 		Mesh mesh = ob.getData().cast(Mesh.class).get();
-		Generic3DObject object = createObject(mesh);
+		VisualObject object = createObject(mesh);
 		setPose(object, ob);
 		return object;
 	}
 
 	
-	public Generic3DObject loadFirstMesh() throws IOException {
+	public VisualObject loadFirstMesh() throws IOException {
 		Mesh mesh = main.getMesh();
 		
 		//
@@ -146,7 +148,7 @@ public class BlenderIO {
 	 * @param objectName Name of the object to load
 	 * @throws IOException 
 	 */
-	public Generic3DObject loadObject(String objectName) throws IOException {
+	public VisualObject loadObject(String objectName) throws IOException {
 		Scene scene = main.getScene();
 		BlenderSceneIterator base_it = new BlenderSceneIterator(scene);
 		while (base_it.hasNext()) {
@@ -166,7 +168,7 @@ public class BlenderIO {
 	
 	
 	
-	private Generic3DObject createObject(Mesh mesh) throws IOException {
+	private VisualObject createObject(Mesh mesh) throws IOException {
 		TriangleMesh triangles;
 		boolean withNormals = true;
 		// TODO get smooth from material (maybe something to be decided by the renderer)
@@ -174,27 +176,23 @@ public class BlenderIO {
 		//
 		// retrieve texture(s) from material
 		//
-		Generic3DMaterial material = getMaterial(mesh);
-		Generic3DRenderAssets assets;
+		org.cakelab.oge.scene.Material material = getMaterial(mesh);
 		if (material.hasTextures()) {
 			//
 			// get polygons with associated uv coordinates
 			//
 			triangles = createTriangleMesh(mesh, true, withNormals, smooth);
-			assets = new Generic3DRenderAssets(triangles, material);
 
 		} else {
 			triangles = createTriangleMesh(mesh, false, withNormals, smooth);
-			triangles.dump();
-			assets = new Generic3DRenderAssets(triangles, material);
 		}
-		return new Generic3DObject(assets);
+		return new VisualMeshObject(triangles, material);
 	}
 
 	
-	private Generic3DMaterial getMaterial(Mesh mesh) throws IOException {
+	private org.cakelab.oge.scene.Material getMaterial(Mesh mesh) throws IOException {
 		Vector4f basecolor = new Vector4f(0,0,0,1);
-		Generic3DTextureImage texture = null;
+		TextureImage texture = null;
 		float emitter_intensity = 0f;
 		
 		short totcol = mesh.getTotcol();
@@ -232,7 +230,7 @@ public class BlenderIO {
 					int pixelFormat = GL11.GL_RGBA;
 					boolean flipped = true;
 
-					texture = new Generic3DTextureImage(image, pixelFormat, flipped);
+					texture = new TextureImage(image, pixelFormat, flipped);
 					break;
 				}
 			}
@@ -240,7 +238,7 @@ public class BlenderIO {
 			System.err.println("warning: mesh without material");
 		}
 
-		return new Generic3DMaterial(basecolor, texture, emitter_intensity);
+		return new org.cakelab.oge.scene.Material(basecolor, texture, emitter_intensity);
 	}
 	
 	private TriangleMesh createTriangleMesh(Mesh mesh, boolean withUv, boolean withNormals, boolean smooth) throws IOException {

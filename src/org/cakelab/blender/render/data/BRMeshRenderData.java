@@ -1,9 +1,9 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.data;
 
-import org.cakelab.oge.MeshRenderData;
 import org.cakelab.oge.opengl.VertexArrayObject;
+import org.cakelab.oge.scene.ModuleData;
 
-public class BRMeshRenderData implements MeshRenderData {
+public class BRMeshRenderData implements ModuleData {
 
 	private VertexArrayObject vao;
 
@@ -11,7 +11,6 @@ public class BRMeshRenderData implements MeshRenderData {
 		this.vao = vertexArrayObject;
 	}
 
-	@Override
 	public void bind() {
 		vao.bind();
 	}

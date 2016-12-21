@@ -1,26 +1,24 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.RenderAssets;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.joml.Vector4f;
 
 
 
-public class SimpleBaseColorTexRenderer extends Renderer {
+public class SimpleBaseColorTexRenderer extends SingleProgramRendererBase {
 	private int uniform_basecolor;
 
 	public SimpleBaseColorTexRenderer() throws GLException, IOException {
@@ -51,21 +49,18 @@ public class SimpleBaseColorTexRenderer extends Renderer {
 
 	
 	@Override
-	public void prepareRenderPass(GraphicContext context, double currentTime) {
+	public void prepareRenderPass(ApplicationContext context, double currentTime) {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject vobj) {
-		Generic3DObject o = (Generic3DObject) vobj;
-		RenderAssets assets = o.getRenderAssets();
-
-		// not the fastest method of course ..
+	public void draw(double currentTime, VisualObject o) {
+		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 		assets.bind();
-		Vector4f basecolor = o.getBaseColor();
+
+		Vector4f basecolor = o.getMaterial().getColor();
 		glUniform4f(uniform_basecolor, basecolor.x, basecolor.y, basecolor.z, basecolor.w);
 
-		
-		glDrawArrays(assets.getDrawingMethod(), 0, assets.getNumVertices());
+		assets.draw();
 	}
 
 

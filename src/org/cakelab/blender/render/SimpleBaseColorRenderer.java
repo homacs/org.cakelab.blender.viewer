@@ -1,26 +1,24 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.blender.io.Generic3DRenderAssets;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.joml.Vector4f;
 
 
 
-public class SimpleBaseColorRenderer extends Renderer {
+public class SimpleBaseColorRenderer extends SingleProgramRendererBase {
 	private int uniform_basecolor;
 
 	public SimpleBaseColorRenderer() throws GLException, IOException {
@@ -49,25 +47,23 @@ public class SimpleBaseColorRenderer extends Renderer {
 
 	
 	@Override
-	public void prepareRenderPass(GraphicContext context, double currentTime) {
+	public void prepareRenderPass(ApplicationContext context, double currentTime) {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject vobj) {
-		Generic3DObject o = (Generic3DObject) vobj;
-		Generic3DRenderAssets assets = (Generic3DRenderAssets) o.getRenderAssets();
+	public void draw(double currentTime, VisualObject o) {
+		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 
 		// not the fastest method of course ..
 		assets.bind();
-		Vector4f basecolor = o.getBaseColor();
-		if (assets.getMaterial().isEmitter()) {
+		Vector4f basecolor = o.getMaterial().getColor();
+		if (assets.getMaterial().isLightEmitting()) {
 			basecolor = new Vector4f(basecolor);
 			basecolor.mul(assets.getMaterial().getEmitterIntensity());
 		}
 		glUniform4f(uniform_basecolor, basecolor.x, basecolor.y, basecolor.z, basecolor.w);
 
-		
-		glDrawArrays(assets.getDrawingMethod(), 0, assets.getNumVertices());
+		assets.draw();
 	}
 
 

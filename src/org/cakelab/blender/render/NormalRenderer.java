@@ -1,24 +1,23 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 import java.io.IOException;
 
-import org.cakelab.blender.io.Generic3DObject;
-import org.cakelab.oge.GraphicContext;
-import org.cakelab.oge.RenderAssets;
-import org.cakelab.oge.Renderer;
-import org.cakelab.oge.VisualObject;
+import org.cakelab.blender.render.data.BRObjectRenderData;
+import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.scene.VisualMeshObject;
+import org.cakelab.oge.scene.VisualObject;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.GeometryShader;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
+import org.cakelab.oge.utils.SingleProgramRendererBase;
 
 
 
-public class NormalRenderer extends Renderer {
+public class NormalRenderer extends SingleProgramRendererBase {
 	private int uniform_normal_length;
 	private float normal_length = 0.2f;
 
@@ -137,18 +136,16 @@ public class NormalRenderer extends Renderer {
 
 	
 	@Override
-	public void prepareRenderPass(GraphicContext context, double currentTime) {
+	public void prepareRenderPass(ApplicationContext context, double currentTime) {
 		glUniform1f(uniform_normal_length, normal_length );
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject vobj) {
-		Generic3DObject o = (Generic3DObject) vobj;
-		RenderAssets assets = o.getRenderAssets();
-
+	public void draw(double currentTime, VisualObject vo) {
+		VisualMeshObject o = (VisualMeshObject) vo;
+		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 		assets.bind();
-		
-		glDrawArrays(assets.getDrawingMethod(), 0, assets.getNumVertices());
+		assets.draw();
 	}
 
 
