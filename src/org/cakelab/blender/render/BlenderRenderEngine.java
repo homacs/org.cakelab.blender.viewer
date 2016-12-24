@@ -1,7 +1,6 @@
 package org.cakelab.blender.render;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
 
 import java.io.IOException;
 
@@ -12,7 +11,8 @@ import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.blender.render.data.BRTextureRenderData;
 import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.app.ApplicationContext;
-import org.cakelab.oge.opengl.VertexArrayObject;
+import org.cakelab.oge.opengl.BufferObject.Usage;
+import org.cakelab.oge.opengl.MeshVertexArray;
 import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.LightSource;
@@ -102,7 +102,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		Mesh mesh = gob.getMesh();
 		Material material = gob.getMaterial();
-		VertexArrayObject vao = new VertexArrayObject(mesh, VERTEX_ATTRIBUTE_COORDS, GL_STATIC_DRAW);
+		MeshVertexArray vao = new MeshVertexArray(mesh, VERTEX_ATTRIBUTE_COORDS, Usage.STATIC_DRAW);
 		TextureImage textureImage = material.getColorTexture();
 		SingleProgramRendererBase renderer;
 		if (textureImage != null && mesh.hasUVCoordinates()) {

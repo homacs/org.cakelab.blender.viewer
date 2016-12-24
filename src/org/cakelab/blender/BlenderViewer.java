@@ -34,12 +34,8 @@ public class BlenderViewer extends ApplicationBase {
 		info.flags.vsync = false;
 		player = new Player();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
-//		String filename = "resources/suzanne.blend";
-//		String filename = "resources/suzanne-scene.blend";
-//		String filename = "resources/cube.blend";
-//		String filename = "resources/common-can+mat.blend";
-		String filename = "resources/xyz-scene.blend";
-//		String filename = "resources/simple-cube.blend";
+//		String filename = "examples/suzanne-scene.blend";
+		String filename = "examples/xyz-scene.blend";
 		BlenderIO io = new BlenderIO(new File(filename));
 		scene = io.loadScene();
 		

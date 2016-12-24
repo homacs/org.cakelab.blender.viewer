@@ -17,7 +17,7 @@ public class BRMeshRenderData implements ModuleData {
 
 	@Override
 	public void delete() {
-		vao.delete();
+		vao.delete(true);
 	}
 
 	public VertexArrayObject getVertexArrayObject() {
