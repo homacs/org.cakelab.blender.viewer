@@ -107,20 +107,28 @@ public class BlenderIO {
 		return camera;
 	}
 
-	private void setPose(org.cakelab.oge.scene.Pose camera, BlenderObject ob) throws IOException {
+	private void setPose(org.cakelab.oge.scene.Pose pose, BlenderObject ob) throws IOException {
 		float[] tmp = new float[3];
 		ob.getLoc().toArray(tmp, 0, 3);
 		convertVector(tmp, 0);
-		camera.setX(tmp[0]);
-		camera.setY(tmp[1]);
-		camera.setZ(tmp[2]);
+		pose.setX(tmp[0]);
+		pose.setY(tmp[1]);
+		pose.setZ(tmp[2]);
+		
+//		// TODO object origin
+//		ob.getOrig().toArray(tmp, 0, 3);
+//		
+		/** this is actually the scale of the object, not its size */
+		ob.getSize().toArray(tmp, 0, 3);
+		convertScale(tmp, 0);
+		pose.setScale(tmp[0], tmp[1], tmp[2]);
 		
 		ob.getRot().toArray(tmp, 0, 3);
-		convertRotation(tmp, 0);
+		convertEulerRotation(tmp, 0);
 		float pitch = (float) Math.toDegrees(tmp[0]);
 		float yaw = (float) Math.toDegrees(tmp[1]);
 		float roll = (float) Math.toDegrees(tmp[2]);
-		camera.setRotation(pitch, yaw, roll);
+		pose.setRotation(pitch, yaw, roll);
 		
 	}
 
@@ -448,7 +456,15 @@ public class BlenderIO {
 		 in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);		
 	}
 
-	private void convertRotation(float[] array, int vectorStart) {
+	private void convertScale(float[] array, int vectorStart) {
+		float tmp = array[vectorStart + 1];
+		array[vectorStart + 1] = array[vectorStart + 2];
+		array[vectorStart + 2] = tmp;
+		// array[vectorStart + 0] = array[vectorStart + 0];
+	}
+
+
+	private void convertEulerRotation(float[] array, int vectorStart) {
 		float tmp = array[vectorStart + 1];
 		array[vectorStart + 1] = array[vectorStart + 2];
 		array[vectorStart + 2] = tmp;
