@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;
-import org.cakelab.oge.scene.VisualObject;
+import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
@@ -51,7 +51,7 @@ public class SimpleBaseColorRenderer extends SingleProgramRendererBase {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject o) {
+	public void draw(double currentTime, VisualEntity o) {
 		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 
 		// not the fastest method of course ..

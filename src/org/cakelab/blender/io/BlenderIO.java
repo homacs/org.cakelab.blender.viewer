@@ -32,11 +32,11 @@ import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
 import org.cakelab.blender.utils.BlenderSceneIterator;
 import org.cakelab.oge.scene.TextureImage;
-import org.cakelab.oge.scene.VisualMeshObject;
-import org.cakelab.oge.scene.VisualObject;
+import org.cakelab.oge.scene.VisualMeshEntity;
+import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
-import org.cakelab.soapbox.model.QuadMesh;
 import org.cakelab.soapbox.model.TriangleMesh;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
@@ -47,6 +47,7 @@ public class BlenderIO {
 	private MainLib main;
 	private ArrayList<org.cakelab.oge.Camera> cameras = new ArrayList<org.cakelab.oge.Camera>();
 	private File file;
+	private CoordinateSystemConverter converter;
 	
 	
 	public BlenderIO(File file) throws IOException {
@@ -60,6 +61,8 @@ public class BlenderIO {
 		}
 		main = new MainLib(f);
 		f.close();
+		
+		converter = new ConvertBlender2OpenGL();
 	}
 	
 	public ArrayList<org.cakelab.oge.Camera> getCameras() {
@@ -98,49 +101,76 @@ public class BlenderIO {
 		return lamp;
 	}
 
+	private void setPose(org.cakelab.oge.scene.Pose pose, BlenderObject ob) throws IOException {
+		// TODO Auto-generated method stub
+		float[] tmp = new float[3];
+		ob.getLoc().toArray(tmp, 0, 3);
+		converter.convertVector(tmp, 0, 3);
+		pose.setX(tmp[0]);
+		pose.setY(tmp[1]);
+		pose.setZ(tmp[2]);
+		
+		ob.getRot().toArray(tmp, 0, 3);
+		Quaternionf rotation = converter.convertEulerRotation(tmp, 0);
+		pose.setRotation(rotation);
+		
+//		// TODO object origin
+//		ob.getOrig().toArray(tmp, 0, 3);
+//		
+
+	}
+
 	private org.cakelab.oge.Camera loadCamera(BlenderObject ob) throws IOException {
 		// TODO: camera pose seems wrong
 		Camera cam = ob.getData().cast(Camera.class).get();
 		org.cakelab.oge.Camera camera = new org.cakelab.oge.Camera(0, 0, 0, 0, 0, 0);
 		camera.setFoV(cam.getLens());
-		setPose(camera, ob);
+		setCameraView(camera, ob);
 		return camera;
 	}
 
-	private void setPose(org.cakelab.oge.scene.Pose pose, BlenderObject ob) throws IOException {
+	private void setCameraView(org.cakelab.oge.Camera pose, BlenderObject ob) throws IOException {
 		float[] tmp = new float[3];
 		ob.getLoc().toArray(tmp, 0, 3);
-		convertVector(tmp, 0);
+		converter.convertVector(tmp, 0, 3);
 		pose.setX(tmp[0]);
 		pose.setY(tmp[1]);
 		pose.setZ(tmp[2]);
 		
-//		// TODO object origin
-//		ob.getOrig().toArray(tmp, 0, 3);
-//		
-		/** this is actually the scale of the object, not its size */
-		ob.getSize().toArray(tmp, 0, 3);
-		convertScale(tmp, 0);
-		pose.setScale(tmp[0], tmp[1], tmp[2]);
-		
 		ob.getRot().toArray(tmp, 0, 3);
-		convertEulerRotation(tmp, 0);
-		float pitch = (float) Math.toDegrees(tmp[0]);
-		float yaw = (float) Math.toDegrees(tmp[1]);
-		float roll = (float) Math.toDegrees(tmp[2]);
-		pose.setRotation(pitch, yaw, roll);
+		/*
+		 * Blenders default camera orientation is towards negative 
+		 * Z and up is along postive Y.
+		 */
+		Vector3f forward = new Vector3f(0, 0, -1);
+		Vector3f up = new Vector3f(0, 1, 0);
+		Quaternionf rotation = converter.convertCameraOrientation(forward, up, tmp);
+		pose.setOrientation(forward, up);
+		pose.apply(rotation);
 		
 	}
 
-	private VisualObject loadMesh(BlenderObject ob) throws IOException {
+	private void setPoseAndScale(org.cakelab.oge.scene.Entity pose, BlenderObject ob) throws IOException {
+		setPose(pose, ob);
+
+		float[] tmp = new float[3];
+
+		/** this is actually the scale of the object, not its size */
+		ob.getSize().toArray(tmp, 0, 3);
+		converter.convertScale(tmp, 0);
+		pose.setScale(tmp[0], tmp[1], tmp[2]);
+		
+	}
+
+	private VisualEntity loadMesh(BlenderObject ob) throws IOException {
 		Mesh mesh = ob.getData().cast(Mesh.class).get();
-		VisualObject object = createObject(mesh);
-		setPose(object, ob);
+		VisualEntity object = createObject(mesh);
+		setPoseAndScale(object, ob);
 		return object;
 	}
 
 	
-	public VisualObject loadFirstMesh() throws IOException {
+	public VisualEntity loadFirstMesh() throws IOException {
 		Mesh mesh = main.getMesh();
 		
 		//
@@ -156,7 +186,7 @@ public class BlenderIO {
 	 * @param objectName Name of the object to load
 	 * @throws IOException 
 	 */
-	public VisualObject loadObject(String objectName) throws IOException {
+	public VisualEntity loadObject(String objectName) throws IOException {
 		Scene scene = main.getScene();
 		BlenderSceneIterator base_it = new BlenderSceneIterator(scene);
 		while (base_it.hasNext()) {
@@ -176,7 +206,7 @@ public class BlenderIO {
 	
 	
 	
-	private VisualObject createObject(Mesh mesh) throws IOException {
+	private VisualEntity createObject(Mesh mesh) throws IOException {
 		TriangleMesh triangles;
 		boolean withNormals = true;
 		// TODO get smooth from material (maybe something to be decided by the renderer)
@@ -194,7 +224,7 @@ public class BlenderIO {
 		} else {
 			triangles = createTriangleMesh(mesh, false, withNormals, smooth);
 		}
-		return new VisualMeshObject(triangles, material);
+		return new VisualMeshEntity(triangles, material);
 	}
 
 	
@@ -300,12 +330,12 @@ public class BlenderIO {
 				// loop is a quad
 				float[] quad = new float[4 * vectorSize];
 				copyVertices(quad, 0, nvertices, loff, loops, loopsuv, vertices, withNormals, poly_smooth);
-				arrayLength = QuadMesh.convQuadToTriangles(quad, 0, coords, arrayLength, vectorSize);
+				arrayLength = converter.convertToTriangles(quad, 0, coords, arrayLength, vectorSize, 4);
 			} else {
 				// loop is polygon with nvertices>4
 				float[] verts = new float[nvertices * vectorSize];
 				copyVertices(verts, 0, nvertices, loff, loops, loopsuv, vertices, withNormals, poly_smooth);
-				arrayLength = convertToTriangles(verts, 0, coords, arrayLength, vectorSize, nvertices);
+				arrayLength = converter.convertToTriangles(verts, 0, coords, arrayLength, vectorSize, nvertices);
 			}
 		}
 
@@ -336,7 +366,7 @@ public class BlenderIO {
 				
 				normal = ab.cross(ac);
 				
-				convertVector(normal);
+				converter.convertVector(normal);
 				normal.normalize();
 			}
 		}
@@ -352,7 +382,7 @@ public class BlenderIO {
 			CArrayFacade<Float> co = v.getCo();
 			int len = co.length();
 			co.toArray(target, targetPos, len);
-			convertVector(target, targetPos);
+			converter.convertVector(target, targetPos, len);
 			targetPos += len;
 			
 			
@@ -379,7 +409,7 @@ public class BlenderIO {
 					target[targetPos + 1] = no.get(1);
 					target[targetPos + 2] = no.get(2);
 					convertNormal(target, targetPos);
-					convertVector(target, targetPos);
+					converter.convertVector(target, targetPos, 3);
 					targetPos += len;
 				} else {
 					target[targetPos + 0] = normal.x;
@@ -395,80 +425,10 @@ public class BlenderIO {
 
 
 	
-
-	private int convertToTriangles(float[] source, int srcPos, float[] target, int targetPos, int vectorSize, int nvertices) {
-		// convert a polygon into a set of triangles
-		// Starting with the first 3 vertices for the first triangle
-		// proceed by taking the latter 2 vertices of the previous triangle and
-		// add the next vertex to build another triangle.
-		// XXX: This method works for concave polygons only.
-		
-		int i, j, k; // indices of the vertices of one particular triangle
-		int front = 0, back = nvertices-1;
-		int ntriangles = nvertices -2;
-		
-		for (int t = 0; t < ntriangles; t++) {
-			if (t%2 == 0) {
-				i = front;
-				j = ++front;
-				k = back;
-			} else {
-				k = back;
-				j = --back;
-				i = front;
-			}
-			
-			targetPos = createTriangle(source, srcPos, i, j, k, target, targetPos, vectorSize);
-			
-		}
-		
-		return targetPos;
-	}
-
-	private int createTriangle(float[] source, int srcPos, int i, int j,
-			int k, float[] target, int targetPos, int vectorSize) {
-		System.arraycopy(source, srcPos +i*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		System.arraycopy(source, srcPos +j*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		System.arraycopy(source, srcPos +k*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		return targetPos;
-	}
-
-	private void convertVector(float[] array, int vectorStart) {
-		float tmp = array[vectorStart + 1];
-		array[vectorStart + 1] = array[vectorStart + 2];
-		array[vectorStart + 2] = tmp;
-		array[vectorStart + 0] = - array[vectorStart + 0];
-	}
-
-	private void convertVector(Vector3f v) {
-		float tmp = v.y;
-		v.y = v.z;
-		v.z = tmp;
-		v.x = - v.x;
-	}
-
 	private void convertNormal(float[] in, int pos) {
 		 in[pos + 0] = in[pos + 0] * (1.0f / 32767.0f);
 		 in[pos + 1] = in[pos + 1] * (1.0f / 32767.0f);
-		 in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);		
-	}
-
-	private void convertScale(float[] array, int vectorStart) {
-		float tmp = array[vectorStart + 1];
-		array[vectorStart + 1] = array[vectorStart + 2];
-		array[vectorStart + 2] = tmp;
-		// array[vectorStart + 0] = array[vectorStart + 0];
-	}
-
-
-	private void convertEulerRotation(float[] array, int vectorStart) {
-		float tmp = array[vectorStart + 1];
-		array[vectorStart + 1] = array[vectorStart + 2];
-		array[vectorStart + 2] = tmp;
-		array[vectorStart + 0] = array[vectorStart + 0];
+		 in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);
 	}
 
 

@@ -11,7 +11,7 @@ import org.cakelab.blender.render.data.BRLightRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;
 import org.cakelab.oge.scene.LightSource;
-import org.cakelab.oge.scene.VisualObject;
+import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
@@ -75,7 +75,7 @@ public class PhongTexPerFragmentRenderer extends SingleProgramRendererBase {
 	}
 
 	@Override
-	public void draw(double currentTime, VisualObject o) {
+	public void draw(double currentTime, VisualEntity o) {
 		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
 		assets.bind();
 

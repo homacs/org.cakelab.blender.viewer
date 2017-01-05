@@ -5,6 +5,8 @@ import static org.lwjgl.opengl.GL11.*;
 import java.io.IOException;
 
 import org.cakelab.appbase.log.Log;
+import org.cakelab.blender.render.coords.CoordPlane;
+import org.cakelab.blender.render.coords.CoordPlaneRenderer;
 import org.cakelab.blender.render.data.BRLightRenderData;
 import org.cakelab.blender.render.data.BRMeshRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
@@ -17,8 +19,8 @@ import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.Scene;
-import org.cakelab.oge.scene.VisualMeshObject;
-import org.cakelab.oge.scene.VisualObject;
+import org.cakelab.oge.scene.VisualMeshEntity;
+import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.texture.GPUTexture;
 import org.cakelab.oge.texture.TextureImageIO;
@@ -45,6 +47,8 @@ public class BlenderRenderEngine implements RenderEngine {
 	private NormalRenderer normalRenderer;
 	private boolean renderNormals;
 	private boolean renderMesh;
+	private CoordPlaneRenderer coordsRenderer;
+	private CoordPlane coords;
 	
 	
 	@Override
@@ -62,12 +66,12 @@ public class BlenderRenderEngine implements RenderEngine {
 		glDepthFunc(GL_LEQUAL);
 		
 		
-		for (VisualObject ob : scene.getVisualObjects()) {
+		for (VisualEntity ob : scene.getVisualObjects()) {
 			try {
-				if (!(ob instanceof VisualMeshObject)) {
+				if (!(ob instanceof VisualMeshEntity)) {
 					Log.warn("Renderer has no proper method to render objects without a mesh");
 				} else {
-					setup((VisualMeshObject)ob);
+					setup((VisualMeshEntity)ob);
 				}
 			} catch (IOException e) {
 				throw new GLException(e);
@@ -92,13 +96,15 @@ public class BlenderRenderEngine implements RenderEngine {
 			phongPerFragmentRenderer = new PhongPerFragmentRenderer();
 			phongTexPerFragmentRenderer = new PhongTexPerFragmentRenderer();
 			normalRenderer = new NormalRenderer();
+			coordsRenderer = new CoordPlaneRenderer();
+			coords = new CoordPlane();
 		} catch (IOException e) {
 			throw new GLException(e);
 		}
 		
 	}
 
-	private void setup(VisualMeshObject gob) throws GLException, IOException {
+	private void setup(VisualMeshEntity gob) throws GLException, IOException {
 		
 		Mesh mesh = gob.getMesh();
 		Material material = gob.getMaterial();
@@ -137,6 +143,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		if (renderer.needsNormals()) {
 			int normalsOffset = mesh.getNormalsOffset();
+			assert(mesh.hasNormals());
 			vao.declareVertexAttribute(VERTEX_ATTRIBUTE_NORMAL, normalsOffset, 3);
 		}
 		
@@ -164,7 +171,7 @@ public class BlenderRenderEngine implements RenderEngine {
 	@Override
 	public void render(ApplicationContext context, double currentTime, Scene scene) {
 		glViewport(0, 0, context.getWindowWidth(), context.getWindowHeight());
-		GLAPIHelper.glClearBuffer4f(GL_COLOR, 0, 0.5f, 0.5f, 0.5f, 1.0f);
+		GLAPIHelper.glClearBuffer4f(GL_COLOR, 0, 0.0f, 0.0f, 0.0f, 1.0f);
 		GLAPIHelper.glClearBuffer1f(GL_DEPTH, 0, 1f);
 
 		context.setProjectionTransform(projection);
@@ -175,24 +182,29 @@ public class BlenderRenderEngine implements RenderEngine {
 		}
 		
 		SingleProgramRendererBase previousRenderer = null;
-		for (VisualObject vobj : scene.getVisualObjects()) {
+		for (VisualEntity vobj : scene.getVisualObjects()) {
 			BRObjectRenderData renderData = (BRObjectRenderData) vobj.getRenderData();
 			SingleProgramRendererBase renderer = renderData.getRenderer();
 			if (renderer != previousRenderer) {
-				// XXX remove hack
+				// TODO [1] remove hack
 				currentTime++;
 				previousRenderer = renderer;
 			}
 			renderer.prepare(context, currentTime);
 			renderer.render(context, currentTime, vobj);
 		}
-		
+
 		if (renderNormals) {
-			for (VisualObject vobj : scene.getVisualObjects()) {
+			// draw HUD elements over the current scene
+			// TODO: [6] what about tranent HUDs?
+			GLAPIHelper.glClearBuffer1f(GL_DEPTH, 0, 1f);
+			for (VisualEntity vobj : scene.getVisualObjects()) {
 				SingleProgramRendererBase renderer = normalRenderer;
 				renderer.prepare(context, currentTime);
 				renderer.render(context, currentTime, vobj);
 			}
+			coordsRenderer.prepare(context, currentTime);
+			coordsRenderer.render(context, currentTime, coords);
 		}
 	}
 

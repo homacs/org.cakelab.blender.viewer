@@ -1,6 +1,7 @@
 package org.cakelab.blender;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.cakelab.appbase.log.ConsoleLog;
@@ -11,15 +12,18 @@ import org.cakelab.oge.Camera;
 import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.app.ApplicationBase;
 import org.cakelab.oge.app.ApplicationContext;
-import org.cakelab.oge.scene.DynamicObject;
+import org.cakelab.oge.scene.DynamicEntity;
 import org.cakelab.oge.scene.Scene;
+import org.cakelab.soapbox.MovementAdapter;
+import org.cakelab.soapbox.FreeCamera;
 import org.cakelab.soapbox.Player;
 import org.lwjgl.glfw.GLFW;
 
 public class BlenderViewer extends ApplicationBase {
 	private RenderEngine engine;
 	private Scene scene;
-	private Player player;
+	private MovementAdapter userMovement;
+	private Camera camera;
 
 	
 	// TODO support switching between fullscreen and windowed mode
@@ -32,16 +36,40 @@ public class BlenderViewer extends ApplicationBase {
 		
 		info.flags.fullscreen = true;
 		info.flags.vsync = false;
-		player = new Player();
+//		createFreeCam();
+		createHeadCam();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
 //		String filename = "examples/suzanne-scene.blend";
 		String filename = "examples/xyz-scene.blend";
+		loadScene(filename);
+
+///		scene = new TestScene(player);
+
+	}
+
+	private void createHeadCam() {
+		Player player = new Player();
+		userMovement = player;
+		camera = player.getCamera();
+	}
+
+	private void createFreeCam() {
+		FreeCamera c = new FreeCamera();
+		userMovement = c;
+		camera = c;
+	}
+
+	public void loadScene(String filename) throws IOException {
 		BlenderIO io = new BlenderIO(new File(filename));
 		scene = io.loadScene();
+
 		
 		// setup camera
 		ArrayList<Camera> cams = io.getCameras();
-		if (!cams.isEmpty()) player.getCamera().set(cams.get(0));
+		if (!cams.isEmpty()) {
+			userMovement.init(cams.get(0));
+//			player.getCamera().set(cams.get(0));
+		}
 
 	}
 
@@ -55,12 +83,12 @@ public class BlenderViewer extends ApplicationBase {
 
 	@Override
 	public void process(double currentTime, ApplicationContext context) throws Throwable {
-		player.update(currentTime);
+		userMovement.update(currentTime);
 		
-		for (DynamicObject vobj : scene.getDynamicObjects()) {
+		for (DynamicEntity vobj : scene.getDynamicObjects()) {
 			vobj.update(currentTime);
 		}
-		context.setActiveCamera(player.getCamera());
+		context.setActiveCamera(camera);
 		context.setActiveLamps(scene.getLightSources());
 		engine.render(context, currentTime, scene);
 
@@ -82,21 +110,21 @@ public class BlenderViewer extends ApplicationBase {
 	    	if (action == GLFW.GLFW_RELEASE) move = -move;
 	        switch (key)
 	        {
-	            case 'W': player.addTranslationVelocity(0f, 0f, -move);
+	            case 'W': userMovement.addTranslationVelocity(0f, 0f, -move);
 	                break;
-	            case 'S': player.addTranslationVelocity(0f, 0f, move);
+	            case 'S': userMovement.addTranslationVelocity(0f, 0f, move);
 	                break;
-	            case 'A': player.addTranslationVelocity(-move, 0f, 0f);
+	            case 'A': userMovement.addTranslationVelocity(-move, 0f, 0f);
 	                break;
-	            case 'D': player.addTranslationVelocity(move, 0f, 0f);
+	            case 'D': userMovement.addTranslationVelocity(move, 0f, 0f);
 	                break;
-	            case 'R': player.addTranslationVelocity(0f, move, 0f);
+	            case 'R': userMovement.addTranslationVelocity(0f, move, 0f);
 	            	break;
-	            case 'F': player.addTranslationVelocity(0f, -move, 0f);
+	            case 'F': userMovement.addTranslationVelocity(0f, -move, 0f);
 	                break;
-	            case 'Q': player.addRotationVelocity(0f, 0f, move*5);
+	            case 'Q': userMovement.addRotationVelocity(0f, 0f, -move*5);
 	            	break;
-	            case 'E': player.addRotationVelocity(0f, 0f, -move*5);
+	            case 'E': userMovement.addRotationVelocity(0f, 0f, move*5);
             		break;
 	            case 'N': if ((action == GLFW.GLFW_PRESS)) engine.toggleNormalView();
         			break;
@@ -104,11 +132,11 @@ public class BlenderViewer extends ApplicationBase {
 	            	break;
 	            case GLFW.GLFW_KEY_LEFT_SHIFT:
 	            case GLFW.GLFW_KEY_RIGHT_SHIFT:
-	            	player.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 2.0f : 1.0f));
+	            	userMovement.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 2.0f : 1.0f));
 	            	break;
 	            case GLFW.GLFW_KEY_LEFT_CONTROL:
 	            case GLFW.GLFW_KEY_RIGHT_CONTROL:
-	            	player.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 0.5f : 1.0f));
+	            	userMovement.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 0.5f : 1.0f));
 	            	break;
 	            case GLFW.GLFW_KEY_ESCAPE:
 	            	requestExit(0);
@@ -124,13 +152,24 @@ public class BlenderViewer extends ApplicationBase {
 	@Override
 	protected synchronized void onMouseMove(double xpos, double ypos, double xmov, double ymov) {
 		double f = 0.03;
-		player.addRotation((float)(ymov * f), (float)(xmov * -f), 0);
+		if (xmov != 0 || ymov != 0) {
+			/* In screen space Y is upside down but X is as normal.
+			 */
+			// If we move the mouse up (-y), we want the pitch to go up
+			// which is a positive turn around our local X axis.
+			float pitch = (float) (-ymov * f);
+			
+			// If we move the mouse to the right (+x) we want yaw to turn right, which is 
+			// a negative turn around our local y axis
+			float yaw = (float) -(xmov * f);
+			userMovement.addRotation(pitch, yaw, 0);
+		}
 	}
 
 	@Override
 	protected synchronized void onResize(int w, int h) throws Throwable {
 		super.onResize(w, h);
-		engine.setView(w, h, player.getCamera().getFoV());
+		engine.setView(w, h, camera.getFoV());
 	}
 
 	
