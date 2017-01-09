@@ -46,8 +46,8 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 
 	public ConvertBlender2OpenGL() {
 		rotationTransform = new Quaternionf();
-		rotationTransform.rotateY(-90);
-		rotationTransform.rotateX(-90);
+		rotationTransform.rotateY((float) Math.toRadians(-90));
+		rotationTransform.rotateX((float) Math.toRadians(-90));
 		
 
 		inverseRotationTransform = new Quaternionf(rotationTransform).invert();
@@ -72,7 +72,12 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 
 	@Override
 	public void convertVector(Vector3f v) {
-		vectorTransform.transform(v);
+		Vector4f vt = new Vector4f(v,1);
+		vectorTransform.transform(vt);
+		v.x = vt.x;
+		v.y = vt.y;
+		v.z = vt.z;
+		
 	}
 
 	@Override
@@ -117,9 +122,9 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		Quaternionf rotation = new Quaternionf();
 		
 		rotation.mul(this.rotationTransform);
-		rotation.rotateZ((float) Math.toDegrees(array[2]));
-		rotation.rotateY((float) Math.toDegrees(array[1]));
-		rotation.rotateX((float) Math.toDegrees(array[0]));
+		rotation.rotateZ(array[2]);
+		rotation.rotateY(array[1]);
+		rotation.rotateX(array[0]);
 		rotation.mul(inverseRotationTransform);
 		
 		return rotation;

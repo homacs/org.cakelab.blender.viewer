@@ -39,11 +39,11 @@ public class BlenderViewer extends ApplicationBase {
 //		createFreeCam();
 		createHeadCam();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
-//		String filename = "examples/suzanne-scene.blend";
-		String filename = "examples/xyz-scene.blend";
+		String filename = "examples/suzanne-scene.blend";
+//		String filename = "examples/xyz-scene.blend";
 		loadScene(filename);
 
-///		scene = new TestScene(player);
+//		scene = new TestScene(userMovement);
 
 	}
 
@@ -67,6 +67,7 @@ public class BlenderViewer extends ApplicationBase {
 		// setup camera
 		ArrayList<Camera> cams = io.getCameras();
 		if (!cams.isEmpty()) {
+			// TODO: init cam and movement adapter
 			userMovement.init(cams.get(0));
 //			player.getCamera().set(cams.get(0));
 		}
@@ -110,13 +111,13 @@ public class BlenderViewer extends ApplicationBase {
 	    	if (action == GLFW.GLFW_RELEASE) move = -move;
 	        switch (key)
 	        {
-	            case 'W': userMovement.addTranslationVelocity(0f, 0f, -move);
+	            case 'W': userMovement.addTranslationVelocity(0f, 0f, move);
 	                break;
-	            case 'S': userMovement.addTranslationVelocity(0f, 0f, move);
+	            case 'S': userMovement.addTranslationVelocity(0f, 0f, -move);
 	                break;
-	            case 'A': userMovement.addTranslationVelocity(-move, 0f, 0f);
+	            case 'A': userMovement.addTranslationVelocity(move, 0f, 0f);
 	                break;
-	            case 'D': userMovement.addTranslationVelocity(move, 0f, 0f);
+	            case 'D': userMovement.addTranslationVelocity(-move, 0f, 0f);
 	                break;
 	            case 'R': userMovement.addTranslationVelocity(0f, move, 0f);
 	            	break;
@@ -156,8 +157,8 @@ public class BlenderViewer extends ApplicationBase {
 			/* In screen space Y is upside down but X is as normal.
 			 */
 			// If we move the mouse up (-y), we want the pitch to go up
-			// which is a positive turn around our local X axis.
-			float pitch = (float) (-ymov * f);
+			// which is a negative turn around our local X axis.
+			float pitch = (float) (ymov * f);
 			
 			// If we move the mouse to the right (+x) we want yaw to turn right, which is 
 			// a negative turn around our local y axis

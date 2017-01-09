@@ -2,13 +2,15 @@ package org.cakelab.blender;
 
 import org.cakelab.blender.TestScene.DynamicTriangle;
 import org.cakelab.oge.Camera;
-import org.cakelab.oge.HeadCamera;
 import org.cakelab.oge.scene.DynamicEntity;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.Material;
+import org.cakelab.oge.scene.Pose;
 import org.cakelab.oge.scene.Scene;
 import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.utils.CameraMatrices;
+import org.cakelab.soapbox.HeadCamera;
+import org.cakelab.soapbox.MovementAdapter;
 import org.cakelab.soapbox.Player;
 import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
 import org.cakelab.soapbox.model.TriangleMesh;
@@ -23,7 +25,7 @@ public class TestScene extends Scene {
 
 		public DynamicTriangle(float x, float y, float z, Vector4f color) {
 			super(x, y, z, color);
-			setRotation(0, 0, 90);
+			setRotation(0, 0, (float) Math.toRadians(90));
 		}
 
 		@Override
@@ -110,9 +112,6 @@ public class TestScene extends Scene {
 		public void setRotation(float pitch, float yaw, float roll) {
 		}
 
-		@Override
-		public void resetRotation() {
-		}
 
 		@Override
 		public void setPosition(int x, int y, int z) {
@@ -146,14 +145,15 @@ public class TestScene extends Scene {
 		}
 	}
 
-	public TestScene(Player player) {
+	public TestScene(MovementAdapter userMovement) {
 		add(new Triangle(0, 0, 0, red));
 		add(new Triangle(3, 0, 0, green));
 		add(new Triangle(0, 3, 0, blue));
 		add(new Triangle(0, 0, 3, yellow));
 		add(new DynamicTriangle(0, 0, 3, yellow));
 		addLightSource(new LightSource(0,0, 10, new Vector3f(1,1,1)));
-//		player.setCamera(new StaticCamera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
+		userMovement.init(new Pose(0, 0, 10, new Vector3f(0,0,1), new Vector3f(0,-1,0)));
+//		userMovement.init(new StaticCamera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 //		player.setCamera(new Camera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 //		player.setCamera(new HeadCamera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 	}
