@@ -2,24 +2,16 @@
 
 uniform mat4 mv_matrix;
 uniform mat4 proj_matrix;
-// base color from material
-uniform vec4 basecolor;
 
 //
-// Two vertex attributes received from application
+// Vertex attributes received from application
 //
 
 // Vertex position (vertex attribut 0).
+// Note: OpenGl adds the 4th component if we feed just vec3
 layout (location = 0) in vec4 position;
-
-out VS_OUT
-{
-    // base color from material to be applied in fragment shader
-    vec4 basecolor;
-} vs_out;
 
 void main(void)
 {
-	vs_out.basecolor = basecolor;
     gl_Position = proj_matrix * mv_matrix * position; 
 }

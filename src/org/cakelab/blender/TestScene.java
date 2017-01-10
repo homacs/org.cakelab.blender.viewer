@@ -1,21 +1,18 @@
 package org.cakelab.blender;
 
-import org.cakelab.blender.TestScene.DynamicTriangle;
 import org.cakelab.oge.Camera;
+import org.cakelab.oge.math.CameraMatrices;
 import org.cakelab.oge.scene.DynamicEntity;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.Pose;
 import org.cakelab.oge.scene.Scene;
 import org.cakelab.oge.scene.VisualMeshEntity;
-import org.cakelab.oge.utils.CameraMatrices;
-import org.cakelab.soapbox.HeadCamera;
 import org.cakelab.soapbox.MovementAdapter;
-import org.cakelab.soapbox.Player;
 import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
 import org.cakelab.soapbox.model.TriangleMesh;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -50,19 +47,8 @@ public class TestScene extends Scene {
 			matrices = new CameraMatrices() {
 
 				@Override
-				public Matrix4f getOrientationTransform() {
-					return StaticCamera.this.orientationTransform;
-				}
-
-				@Override
 				public Matrix4f getViewTransform() {
 					return StaticCamera.this.viewTransform;
-				}
-
-				@Override
-				public Quaternionf getRotationQuaternion() {
-					assert(false);
-					return null;
 				}
 
 				@Override
@@ -89,7 +75,7 @@ public class TestScene extends Scene {
 		}
 
 		@Override
-		public void apply(Quaternionf rotation) {
+		public void apply(Quaternionfc rotation) {
 		}
 
 		@Override
@@ -118,7 +104,7 @@ public class TestScene extends Scene {
 		}
 
 		@Override
-		public void setRotation(Quaternionf rotation) {
+		public void setRotation(Quaternionfc rotation) {
 		}
 
 	}

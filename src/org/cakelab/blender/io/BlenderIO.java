@@ -8,6 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
@@ -17,6 +19,7 @@ import org.blender.dna.Camera;
 import org.blender.dna.Image;
 import org.blender.dna.ImagePackedFile;
 import org.blender.dna.Lamp;
+import org.blender.dna.ListBase;
 import org.blender.dna.MLoop;
 import org.blender.dna.MLoopUV;
 import org.blender.dna.MPoly;
@@ -27,10 +30,15 @@ import org.blender.dna.Mesh;
 import org.blender.dna.PackedFile;
 import org.blender.dna.Scene;
 import org.blender.dna.Tex;
+import org.blender.dna.bChildOfConstraint;
+import org.blender.dna.bConstraint;
+import org.blender.dna.constants.constraints.eBConstraint_Types;
 import org.blender.utils.MainLib;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
+import org.cakelab.blender.utils.BlenderListIterator;
 import org.cakelab.blender.utils.BlenderSceneIterator;
+import org.cakelab.oge.scene.Pose;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.scene.VisualEntity;
@@ -39,16 +47,20 @@ import org.cakelab.soapbox.model.TriangleMesh;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.joml.Vector4fc;
 import org.lwjgl.opengl.GL11;
 
 public class BlenderIO {
 
 	private static final short TYPE_MESH = 1;
+	private static final Vector4fc BLENDER_DEFAULT_COLOR = new Vector4f(0.5f,0.5f,0.5f,1f);
 	private MainLib main;
 	private ArrayList<org.cakelab.oge.Camera> cameras = new ArrayList<org.cakelab.oge.Camera>();
 	private File file;
 	private CoordinateSystemConverter converter;
 	
+	private HashMap<Long, Pose> objects = new HashMap<Long, Pose>();
+	private HashMap<Long, ArrayList<Pose>> children = new HashMap<Long, ArrayList<Pose>>();
 	
 	public BlenderIO(File file) throws IOException {
 		this.file = file;
@@ -90,9 +102,33 @@ public class BlenderIO {
 				// TODO etc
 			}
 		}
+		
+		resolveParentChildRelations();
 		return scene;
 	}
 	
+	private void registerChild(BlenderObject parent, Pose ob) throws IOException {
+		ArrayList<Pose> list = children.get(parent);
+		if (list == null) {
+			list = new ArrayList<Pose>();
+			children.put(parent.__io__addressof().getAddress(), list);
+		}
+		list.add(ob);
+	}
+
+	private void registerObject(BlenderObject ob, Pose p) throws IOException {
+		objects.put(ob.__io__addressof().getAddress(), p);
+	}
+
+	private void resolveParentChildRelations() {
+		for (Entry<Long, ArrayList<Pose>> set : children.entrySet()) {
+			Pose parent = objects.get(set.getKey());
+			for (Pose child : set.getValue()) {
+				child.setReferenceSystem(parent);
+			}
+		}
+	}
+
 	private org.cakelab.oge.scene.LightSource loadLamp(BlenderObject ob) throws IOException {
 		Lamp l = ob.getData().cast(Lamp.class).get();
 		Vector3f rgb = new Vector3f(l.getR(), l.getG(), l.getB());
@@ -102,17 +138,44 @@ public class BlenderIO {
 	}
 
 	private void setPose(org.cakelab.oge.scene.Pose pose, BlenderObject ob) throws IOException {
-		// TODO Auto-generated method stub
-		float[] tmp = new float[3];
-		ob.getLoc().toArray(tmp, 0, 3);
-		converter.convertVector(tmp, 0, 3);
-		pose.setX(tmp[0]);
-		pose.setY(tmp[1]);
-		pose.setZ(tmp[2]);
 		
-		ob.getRot().toArray(tmp, 0, 3);
-		Quaternionf rotation = converter.convertEulerRotation(tmp, 0);
-		pose.setRotation(rotation);
+		BlenderObject parent = ob.getParent().get();
+		if (parent != null) {
+			// In Blender, a childs position and rotation get overridden
+			// by that of the parent.
+			// Thus, we will position our child at 0,0,0 without any rotation
+			// but we keep the relationship just for .. I don't know why ..
+			registerChild(parent, pose);
+		} else {
+		
+			float[] tmp = new float[3];
+			ob.getLoc().toArray(tmp, 0, 3);
+			converter.convertVector(tmp, 0, 3);
+			pose.setX(tmp[0]);
+			pose.setY(tmp[1]);
+			pose.setZ(tmp[2]);
+			
+			ob.getRot().toArray(tmp, 0, 3);
+			Quaternionf rotation = converter.convertEulerRotation(tmp, 0);
+			pose.setRotation(rotation);
+		}
+		
+		registerObject(ob, pose);
+		
+		ListBase constraints = ob.getConstraints();
+		bConstraint c = constraints.getFirst().cast(bConstraint.class).get();
+		if (c != null) {
+			BlenderListIterator<bConstraint> cit = new BlenderListIterator<bConstraint>(c);
+			while (cit.hasNext()) {
+				c = cit.next();
+				if (c.getType() == eBConstraint_Types.CONSTRAINT_TYPE_CHILDOF.v) {
+					bChildOfConstraint childof = c.getData().cast(bChildOfConstraint.class).get();
+					parent = childof.getTar().get();
+					registerChild(parent, pose);
+					break;
+				}
+			}
+		}
 		
 //		// TODO object origin
 //		ob.getOrig().toArray(tmp, 0, 3);
@@ -155,28 +218,36 @@ public class BlenderIO {
 
 		float[] tmp = new float[3];
 
-		/** this is actually the scale of the object, not its size */
-		ob.getSize().toArray(tmp, 0, 3);
-		converter.convertScale(tmp, 0);
-		pose.setScale(tmp[0], tmp[1], tmp[2]);
+		BlenderObject parent = ob.getParent().get();
+		if (parent != null) {
+			// leave scale as it is
+		} else {
+			// use scale of object
+			
+			/* size is actually the scale of the object, not its size */
+			ob.getSize().toArray(tmp, 0, 3);
+			converter.convertScale(tmp, 0);
+			pose.setScale(tmp[0], tmp[1], tmp[2]);
+		}
+		
 		
 	}
 
 	private VisualEntity loadMesh(BlenderObject ob) throws IOException {
 		Mesh mesh = ob.getData().cast(Mesh.class).get();
-		VisualEntity object = createObject(mesh);
+		VisualEntity object = createObject(ob, mesh);
 		setPoseAndScale(object, ob);
 		return object;
 	}
 
 	
 	public VisualEntity loadFirstMesh() throws IOException {
+		// TODO should be loadFirstObject() not mesh
 		Mesh mesh = main.getMesh();
-		
 		//
 		// Convert mesh and texture into opengl suitable format
 		//
-		return createObject(mesh);
+		return createObject(null, mesh);
 	}
 	
 	
@@ -196,7 +267,7 @@ public class BlenderIO {
 			if (name.equals("OB" + objectName)) {
 				if (o.getType() == TYPE_MESH) {
 					Mesh mesh = o.getData().cast(Mesh.class).get();
-					return createObject(mesh);
+					return createObject(o, mesh);
 				}
 			}
 		}
@@ -206,7 +277,7 @@ public class BlenderIO {
 	
 	
 	
-	private VisualEntity createObject(Mesh mesh) throws IOException {
+	private VisualEntity createObject(BlenderObject ob, Mesh mesh) throws IOException {
 		TriangleMesh triangles;
 		boolean withNormals = true;
 		// TODO get smooth from material (maybe something to be decided by the renderer)
@@ -214,7 +285,7 @@ public class BlenderIO {
 		//
 		// retrieve texture(s) from material
 		//
-		org.cakelab.oge.scene.Material material = getMaterial(mesh);
+		org.cakelab.oge.scene.Material material = getMaterial(ob, mesh);
 		if (material.hasTextures()) {
 			//
 			// get polygons with associated uv coordinates
@@ -228,7 +299,7 @@ public class BlenderIO {
 	}
 
 	
-	private org.cakelab.oge.scene.Material getMaterial(Mesh mesh) throws IOException {
+	private org.cakelab.oge.scene.Material getMaterial(BlenderObject ob, Mesh mesh) throws IOException {
 		Vector4f basecolor = new Vector4f(0,0,0,1);
 		TextureImage texture = null;
 		float emitter_intensity = 0f;
@@ -239,7 +310,16 @@ public class BlenderIO {
 			throw new IOException("mesh with multiple materials not supported");
 		}
 		CPointer<Material> pmat = mesh.getMat().get();
-		if (pmat.isValid()) {
+		if (pmat == null || !pmat.isValid()) {
+			CArrayFacade<Float> color = ob.getCol();
+			if (color != null && color.length()>=3) {
+				// use color from object data
+				basecolor.set(color.get(0), color.get(1), color.get(2), 1f);
+			} else {
+				basecolor.set(BLENDER_DEFAULT_COLOR);
+			}
+			emitter_intensity = 0;
+		} else {
 			Material mat = pmat.get();
 			/*
 			 * we interpret the colour of the material as base colour
@@ -272,8 +352,6 @@ public class BlenderIO {
 					break;
 				}
 			}
-		} else {
-			System.err.println("warning: mesh without material");
 		}
 
 		return new org.cakelab.oge.scene.Material(basecolor, texture, emitter_intensity);

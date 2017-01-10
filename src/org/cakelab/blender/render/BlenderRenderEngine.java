@@ -196,7 +196,7 @@ public class BlenderRenderEngine implements RenderEngine {
 
 		if (renderNormals) {
 			// draw HUD elements over the current scene
-			// TODO: [6] what about tranent HUDs?
+			// TODO: [6] what about transparent HUDs?
 			GLAPIHelper.glClearBuffer1f(GL_DEPTH, 0, 1f);
 			for (VisualEntity vobj : scene.getVisualObjects()) {
 				SingleProgramRendererBase renderer = normalRenderer;

@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.render.data.BRLightRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;

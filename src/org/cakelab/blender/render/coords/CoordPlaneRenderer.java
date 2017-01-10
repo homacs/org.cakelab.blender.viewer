@@ -17,7 +17,6 @@ import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.shader.Program;
 import org.cakelab.oge.shader.VertexShader;
 import org.cakelab.oge.utils.SingleProgramRendererBase;
-import org.joml.Matrix4f;
 
 
 public class CoordPlaneRenderer extends SingleProgramRendererBase {
@@ -51,10 +50,9 @@ public class CoordPlaneRenderer extends SingleProgramRendererBase {
 	
 	public void render(ApplicationContext context, double currentTime, VisualEntity vobj) {
 		Camera camera = context.getActiveCamera();
-		Matrix4f rotate = new Matrix4f(camera.matrices.getOrientationTransform()).invert();
 		mv_matrix.identity()
 			.mul(vobj.getMatrices().getWorldTransform())
-			.mul(rotate)
+			.rotate(camera.getMatrices().getInverseRotation())
 		;
 		
 		glUniformMatrix4fv(uniform_mv_matrix, false, mv_matrix.getFloatBuffer());

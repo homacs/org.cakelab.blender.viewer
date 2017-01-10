@@ -18,7 +18,6 @@ import org.cakelab.soapbox.MovementAdapter;
 import org.cakelab.soapbox.FreeCamera;
 import org.cakelab.soapbox.Player;
 import org.lwjgl.glfw.GLFW;
-
 public class BlenderViewer extends ApplicationBase {
 	private RenderEngine engine;
 	private Scene scene;
@@ -39,8 +38,8 @@ public class BlenderViewer extends ApplicationBase {
 //		createFreeCam();
 		createHeadCam();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
-		String filename = "examples/suzanne-scene.blend";
-//		String filename = "examples/xyz-scene.blend";
+//		String filename = "examples/suzanne-scene.blend";
+		String filename = "examples/xyz-scene.blend";
 		loadScene(filename);
 
 //		scene = new TestScene(userMovement);
@@ -76,9 +75,7 @@ public class BlenderViewer extends ApplicationBase {
 
 	@Override
 	protected void startup() throws Throwable {
-
 		engine.setup(scene);
-		// FIXME mouse cursor missing even outside of the window 
 		setVirtualCursor(true);
 	}
 
@@ -86,13 +83,12 @@ public class BlenderViewer extends ApplicationBase {
 	public void process(double currentTime, ApplicationContext context) throws Throwable {
 		userMovement.update(currentTime);
 		
-		for (DynamicEntity vobj : scene.getDynamicObjects()) {
+		for (DynamicEntity vobj : scene.getDynamicEntities()) {
 			vobj.update(currentTime);
 		}
 		context.setActiveCamera(camera);
 		context.setActiveLamps(scene.getLightSources());
 		engine.render(context, currentTime, scene);
-
 	}
 
 	@Override
