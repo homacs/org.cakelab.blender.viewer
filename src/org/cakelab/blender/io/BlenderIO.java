@@ -185,10 +185,15 @@ public class BlenderIO {
 	}
 
 	private org.cakelab.oge.Camera loadCamera(BlenderObject ob) throws IOException {
-		// TODO: camera pose seems wrong
 		Camera cam = ob.getData().cast(Camera.class).get();
 		org.cakelab.oge.Camera camera = new org.cakelab.oge.Camera(0, 0, 0, 0, 0, 0);
-		camera.setFoV(cam.getLens());
+		
+		// calculate field of view from focal length
+		float f = cam.getLens();     // focal length
+		float d = cam.getSensor_y(); // receiver width (for horizontal fov angle)
+		float fov = (float) (2 * Math.atan(d/(2*f)));
+		camera.setFoV((float) Math.toDegrees(fov));
+		
 		setCameraView(camera, ob);
 		return camera;
 	}

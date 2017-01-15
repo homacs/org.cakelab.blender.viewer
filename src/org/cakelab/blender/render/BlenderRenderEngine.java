@@ -165,7 +165,7 @@ public class BlenderRenderEngine implements RenderEngine {
 	@Override
 	public void setView(int width, int height, float fov) {
 		float aspectRatio = (float) width / (float) height;
-		projection.setPerspective((float) Math.toRadians(50.0f), aspectRatio, 0.1f, 1000.0f);
+		projection.setPerspective((float) Math.toRadians(fov), aspectRatio, 0.1f, 1000.0f);
 	}
 
 	@Override
