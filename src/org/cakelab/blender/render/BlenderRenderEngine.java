@@ -66,7 +66,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		glDepthFunc(GL_LEQUAL);
 		
 		
-		for (VisualEntity ob : scene.getVisualObjects()) {
+		for (VisualEntity ob : scene.getVisualEntities()) {
 			try {
 				if (!(ob instanceof VisualMeshEntity)) {
 					Log.warn("Renderer has no proper method to render objects without a mesh");
@@ -182,7 +182,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		}
 		
 		SingleProgramRendererBase previousRenderer = null;
-		for (VisualEntity vobj : scene.getVisualObjects()) {
+		for (VisualEntity vobj : scene.getVisualEntities()) {
 			BRObjectRenderData renderData = (BRObjectRenderData) vobj.getRenderData();
 			SingleProgramRendererBase renderer = renderData.getRenderer();
 			if (renderer != previousRenderer) {
@@ -198,7 +198,7 @@ public class BlenderRenderEngine implements RenderEngine {
 			// draw HUD elements over the current scene
 			// TODO: [6] what about transparent HUDs?
 			GLAPIHelper.glClearBuffer1f(GL_DEPTH, 0, 1f);
-			for (VisualEntity vobj : scene.getVisualObjects()) {
+			for (VisualEntity vobj : scene.getVisualEntities()) {
 				SingleProgramRendererBase renderer = normalRenderer;
 				renderer.prepare(context, currentTime);
 				renderer.render(context, currentTime, vobj);

@@ -138,7 +138,7 @@ public class TestScene extends Scene {
 		add(new Triangle(0, 0, 3, yellow));
 		add(new DynamicTriangle(0, 0, 3, yellow));
 		addLightSource(new LightSource(0,0, 10, new Vector3f(1,1,1)));
-		userMovement.init(new Pose(0, 0, 10, new Vector3f(0,0,1), new Vector3f(0,-1,0)));
+		userMovement.init(new Pose(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 //		userMovement.init(new StaticCamera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 //		player.setCamera(new Camera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));
 //		player.setCamera(new HeadCamera(0, 0, 10, new Vector3f(0,0,-1), new Vector3f(0,1,0)));

@@ -23,7 +23,7 @@ public class BlenderIDIterator<T> implements Iterator<T> {
 			ID id = (ID) getId.invoke(objectWithId);
 			id.getNext();
 		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | IOException e) {
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException("object must have a method 'getId()'", e);
 		}
 		
 		current = objectWithId;

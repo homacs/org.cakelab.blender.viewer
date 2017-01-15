@@ -61,7 +61,6 @@ public class BlenderViewer extends ApplicationBase {
 	public void loadScene(String filename) throws IOException {
 		BlenderIO io = new BlenderIO(new File(filename));
 		scene = io.loadScene();
-
 		
 		// setup camera
 		ArrayList<Camera> cams = io.getCameras();
@@ -171,6 +170,7 @@ public class BlenderViewer extends ApplicationBase {
 
 	
 	public static void main (String[] args) throws Throwable {
+		System.setProperty("joml.nounsafe", "true");
 		BlenderViewer viewer = new BlenderViewer();
 		viewer.run();
 	}

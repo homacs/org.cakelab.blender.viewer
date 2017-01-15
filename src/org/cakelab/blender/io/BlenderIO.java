@@ -159,9 +159,10 @@ public class BlenderIO {
 			Quaternionf rotation = converter.convertEulerRotation(tmp, 0);
 			pose.setRotation(rotation);
 		}
-		
+		// register for resolution of parent child relationships
 		registerObject(ob, pose);
 		
+		// TODO: think about a more generic way for constraint interpretation
 		ListBase constraints = ob.getConstraints();
 		bConstraint c = constraints.getFirst().cast(bConstraint.class).get();
 		if (c != null) {
