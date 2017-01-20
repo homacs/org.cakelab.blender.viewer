@@ -36,8 +36,9 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 
 	private void loadShaders() throws GLException, IOException{
 		File file = new File("resources/shaders/phonglighting/per-fragment-phong.vs.glsl");
-		VertexShader vs = new VertexShader("per-fragment phong vertex shader", 
-				new FileInputStream(file));
+		
+		VertexShader vs = new VertexShader("per-fragment phong vertex shader", file);
+		
 		FragmentShader fs = new FragmentShader("per-fragment phong fragment shader", 
 				new FileInputStream("resources/shaders/phonglighting/per-fragment-phong.fs.glsl"));
 		Program program = new Program("phong shader program", vs, fs);
@@ -60,7 +61,7 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	
 	@Override
 	public void prepareRenderPass(ApplicationContext context, double currentTime) {
-		// TODO support multiple light sources
+		// TODO support multiple light sources and missing light sources
 		ArrayList<LightSource> activeLamps = context.getActiveLamps();
 		LightSource light = activeLamps.get(0);
 		Vector3f light_color = light.getColor();

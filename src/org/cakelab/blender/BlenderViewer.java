@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.cakelab.appbase.log.ConsoleLog;
 import org.cakelab.appbase.log.Log;
-import org.cakelab.blender.io.BlenderIO;
+import org.cakelab.blender.io.BlenderInput;
 import org.cakelab.blender.render.BlenderRenderEngine;
 import org.cakelab.oge.Camera;
 import org.cakelab.oge.RenderEngine;
@@ -59,8 +59,8 @@ public class BlenderViewer extends ApplicationBase {
 	}
 
 	public void loadScene(String filename) throws IOException {
-		BlenderIO io = new BlenderIO(new File(filename));
-		scene = io.loadScene();
+		BlenderInput io = new BlenderInput(new File(filename));
+		scene = io.loadScene(0,1);
 		
 		// setup camera
 		ArrayList<Camera> cams = io.getCameras();

@@ -2,7 +2,9 @@ package org.cakelab.blender.io;
 
 import static org.blender.dna.constants.object.Constants.*;
 import static org.blender.dna.constants.mesh.Constants.*;
+import static org.blender.dna.constants.vfont.Constants.*;
 
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,6 +18,7 @@ import javax.imageio.ImageIO;
 import org.blender.dna.Base;
 import org.blender.dna.BlenderObject;
 import org.blender.dna.Camera;
+import org.blender.dna.Curve;
 import org.blender.dna.Image;
 import org.blender.dna.ImagePackedFile;
 import org.blender.dna.Lamp;
@@ -30,10 +33,12 @@ import org.blender.dna.Mesh;
 import org.blender.dna.PackedFile;
 import org.blender.dna.Scene;
 import org.blender.dna.Tex;
+import org.blender.dna.VFont;
 import org.blender.dna.bChildOfConstraint;
 import org.blender.dna.bConstraint;
 import org.blender.dna.constants.constraints.eBConstraint_Types;
 import org.blender.utils.MainLib;
+import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
 import org.cakelab.blender.utils.BlenderListIterator;
@@ -50,7 +55,7 @@ import org.joml.Vector4f;
 import org.joml.Vector4fc;
 import org.lwjgl.opengl.GL11;
 
-public class BlenderIO {
+public class BlenderInput {
 
 	private static final short TYPE_MESH = 1;
 	private static final Vector4fc BLENDER_DEFAULT_COLOR = new Vector4f(0.5f,0.5f,0.5f,1f);
@@ -62,7 +67,7 @@ public class BlenderIO {
 	private HashMap<Long, Pose> objects = new HashMap<Long, Pose>();
 	private HashMap<Long, ArrayList<Pose>> children = new HashMap<Long, ArrayList<Pose>>();
 	
-	public BlenderIO(File file) throws IOException {
+	public BlenderInput(File file) throws IOException {
 		this.file = file;
 		//
 		// read data from file into heap memory
@@ -81,13 +86,37 @@ public class BlenderIO {
 		return cameras;
 	}
 
-	public org.cakelab.oge.scene.Scene loadScene() throws IOException {
+	/**
+	 * Loads all objects, cameras and lights assigned to the given 
+	 * layers and converts them into a scene.
+	 * 
+	 * @param layers
+	 * @return A scene object with all objects of the selected layers
+	 * @throws IOException
+	 */
+	public org.cakelab.oge.scene.Scene loadScene(Integer ... layers) throws IOException {
+		
+		int selectedLayers = 0;
+		final int MAX_LAYERS = 0xFFFFFF;
+		for (int l : layers) {
+			if (l > MAX_LAYERS || l < 0) throw new IllegalArgumentException("layers have a number starting from 0 upto " + MAX_LAYERS);
+			selectedLayers |= 1<<l;
+		}
+		if (selectedLayers == 0) {
+			// select all layers by default
+			selectedLayers = MAX_LAYERS;
+		}
+		
 		org.cakelab.oge.scene.Scene scene = new org.cakelab.oge.scene.Scene();
 		Scene bscene = main.getScene();
 		BlenderSceneIterator base_it = new BlenderSceneIterator(bscene);
 		while (base_it.hasNext()) {
 			Base base = base_it.next();
 			BlenderObject ob = base.getObject().get();
+			
+			if ((ob.getLay() & selectedLayers) == 0) {
+				continue;
+			}
 			
 			switch (ob.getType()) {
 			case OB_CAMERA:
@@ -99,14 +128,42 @@ public class BlenderIO {
 			case OB_MESH:
 				scene.add(loadMesh(ob));
 				break;
+			case OB_FONT:
+				loadText(ob);
+				break;
+			default:
+				Log.warn("skipped object " + ob.getId().getName().asString() + " with  type " + ob.getType());
 				// TODO etc
 			}
 		}
-		
+
 		resolveParentChildRelations();
 		return scene;
 	}
 	
+	private void loadText(BlenderObject ob) throws IOException {
+		// TODO [6] text and curves
+		// does not work yet
+		
+		Curve curve = ob.getData().cast(Curve.class).get();
+		String text = curve.getStr().toCArrayFacade(curve.getLen()).asString();
+		System.out.println("Text: " + text);
+		
+		/* Vector Fonts used for text in the 3D view-port */
+		VFont vFont = curve.getVfont().get();
+		String fontName = vFont.getName().asString();
+		System.out.println("Font: " + fontName);
+		if (fontName.equals(FO_BUILTIN_NAME)) {
+			// use builtin font
+			Font.getFont("BFont");
+		} else {
+			// load free type font from file
+		}
+
+		/* All the information needed to draw the text is stored in Curve */
+
+	}
+
 	private void registerChild(BlenderObject parent, Pose ob) throws IOException {
 		ArrayList<Pose> list = children.get(parent);
 		if (list == null) {
@@ -432,8 +489,12 @@ public class BlenderIO {
 		if (withNormals) {
 			// TODO clean up normal calculation (*where* and what about smooth)
 			if (!smooth) {
+				// Blender stores only normals which are the average 
+				// of the normals of the adjacent polygons. But if we are not 
+				// using smooth shading, we want the normals perpendicular to 
+				// the plane spanned by the polygon's vertices.
 				
-				// calculating the normal for the polygon from 3 vertices:
+				// calculating the normal of the polygon from 3 vertices:
 				//			vec3 ab = b - a;
 				//          vec3 ac = c - a;
 				//          vec3 normal = normalize(cross(ab, ac));
@@ -483,10 +544,8 @@ public class BlenderIO {
 			}
 
 			if (withNormals) {
-				//
-				// copy calculated normal vector
-				// 
 				if (smooth) {
+					// use Blender normals for smooth shading
 					CArrayFacade<Short> no = v.getNo();
 					len = no.length();
 					target[targetPos + 0] = no.get(0);
@@ -496,12 +555,12 @@ public class BlenderIO {
 					converter.convertVector(target, targetPos, 3);
 					targetPos += len;
 				} else {
+					// copy our calculated normal vector for non-smooth shading
 					target[targetPos + 0] = normal.x;
 					target[targetPos + 1] = normal.y;
 					target[targetPos + 2] = normal.z;
 					targetPos += 3;
 				}				
-			
 			}
 		}
 		return targetPos;
@@ -510,9 +569,10 @@ public class BlenderIO {
 
 	
 	private void convertNormal(float[] in, int pos) {
-		 in[pos + 0] = in[pos + 0] * (1.0f / 32767.0f);
-		 in[pos + 1] = in[pos + 1] * (1.0f / 32767.0f);
-		 in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);
+		// convert into range [-1 .. +1]
+		in[pos + 0] = in[pos + 0] * (1.0f / 32767.0f);
+		in[pos + 1] = in[pos + 1] * (1.0f / 32767.0f);
+		in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);
 	}
 
 
