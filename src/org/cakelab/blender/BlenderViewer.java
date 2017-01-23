@@ -33,8 +33,10 @@ public class BlenderViewer extends ApplicationBase {
 
 		engine = new BlenderRenderEngine();
 		
-		info.flags.fullscreen = true;
-		info.flags.vsync = false;
+		info.settings.fullscreen = true;
+		info.settings.vsync = true;
+		info.settings.fps = 0; // off
+		info.settings.softwareThrottle = false;
 //		createFreeCam();
 		createHeadCam();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";

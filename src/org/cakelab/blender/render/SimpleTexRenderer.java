@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
@@ -16,7 +17,11 @@ import org.cakelab.oge.utils.SingleProgramRendererBase;
 
 
 public class SimpleTexRenderer extends SingleProgramRendererBase {
-	public SimpleTexRenderer() throws GLException, IOException {
+	private int module;
+
+
+	public SimpleTexRenderer(Module module) throws GLException, IOException {
+		this.module = module.getModuleId();
 		loadShaders();
 		
 	}
@@ -44,7 +49,7 @@ public class SimpleTexRenderer extends SingleProgramRendererBase {
 
 	@Override
 	public void draw(double currentTime, VisualEntity o) {
-		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
+		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
 		assets.bind();
 		assets.draw();
 	}

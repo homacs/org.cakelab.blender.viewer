@@ -1,6 +1,6 @@
 package org.cakelab.blender.render.data;
 
-import org.cakelab.oge.scene.ModuleData;
+import org.cakelab.oge.module.ModuleData;
 import org.cakelab.oge.texture.GPUTexture;
 
 public class BRTextureRenderData implements ModuleData {

@@ -3,10 +3,10 @@ package org.cakelab.blender.render.data;
 
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 
+import org.cakelab.oge.module.ModuleData;
 import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.utils.SingleProgramRendererBase;
-import org.cakelab.oge.scene.ModuleData;
 import org.cakelab.soapbox.model.Mesh;
 import org.joml.Vector4f;
 

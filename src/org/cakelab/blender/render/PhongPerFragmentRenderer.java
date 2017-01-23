@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import org.cakelab.blender.render.data.BRLightRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
@@ -28,9 +29,11 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	private int uniform_light_pos;
 	private int uniform_specular_power;
 	private int uniform_ambient_color;
+	private int module;
 	
 	
-	public PhongPerFragmentRenderer() throws GLException, IOException {
+	public PhongPerFragmentRenderer(Module module) throws GLException, IOException {
+		this.module = module.getModuleId();
 		loadShaders();
 	}
 
@@ -77,7 +80,7 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 
 	@Override
 	public void draw(double currentTime, VisualEntity o) {
-		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
+		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
 		assets.bind();
 		// TODO mix material color with light color
 		// TODO mix material specular with light color?

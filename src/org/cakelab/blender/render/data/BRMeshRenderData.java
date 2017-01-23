@@ -1,7 +1,7 @@
 package org.cakelab.blender.render.data;
 
+import org.cakelab.oge.module.ModuleData;
 import org.cakelab.oge.opengl.VertexArrayObject;
-import org.cakelab.oge.scene.ModuleData;
 
 public class BRMeshRenderData implements ModuleData {
 

@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
@@ -20,8 +21,10 @@ import org.cakelab.oge.utils.SingleProgramRendererBase;
 public class NormalRenderer extends SingleProgramRendererBase {
 	private int uniform_normal_length;
 	private float normal_length = 0.2f;
+	private int module;
 
-	public NormalRenderer() throws GLException, IOException {
+	public NormalRenderer(Module mod) throws GLException, IOException {
+		this.module = mod.getModuleId();
 		loadShaders();
 		
 	}
@@ -143,7 +146,7 @@ public class NormalRenderer extends SingleProgramRendererBase {
 	@Override
 	public void draw(double currentTime, VisualEntity vo) {
 		VisualMeshEntity o = (VisualMeshEntity) vo;
-		BRObjectRenderData assets = (BRObjectRenderData) o.getRenderData();
+		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
 		assets.bind();
 		assets.draw();
 	}

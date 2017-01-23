@@ -2,8 +2,8 @@ package org.cakelab.blender.render.data;
 
 import org.cakelab.oge.Camera;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.ModuleData;
 import org.cakelab.oge.scene.LightSource;
-import org.cakelab.oge.scene.ModuleData;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 

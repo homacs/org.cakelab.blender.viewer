@@ -13,6 +13,7 @@ import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.blender.render.data.BRTextureRenderData;
 import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.ModuleRegistry;
 import org.cakelab.oge.opengl.BufferObject.Usage;
 import org.cakelab.oge.opengl.MeshVertexArray;
 import org.cakelab.oge.scene.Material;
@@ -49,6 +50,11 @@ public class BlenderRenderEngine implements RenderEngine {
 	private boolean renderMesh;
 	private CoordPlaneRenderer coordsRenderer;
 	private CoordPlane coords;
+	private final int moduleId;
+	
+	public BlenderRenderEngine() {
+		moduleId = ModuleRegistry.registerModule(this);
+	}
 	
 	
 	@Override
@@ -90,13 +96,13 @@ public class BlenderRenderEngine implements RenderEngine {
 
 	private void setupRenders() throws GLException {
 		try {
-			simpleBaseColorTexRenderer = new SimpleBaseColorTexRenderer();
-			simpleBaseColorRenderer = new SimpleBaseColorRenderer();
-			phongPerVertexRenderer = new PhongPerVertexRenderer();
-			phongPerFragmentRenderer = new PhongPerFragmentRenderer();
-			phongTexPerFragmentRenderer = new PhongTexPerFragmentRenderer();
-			normalRenderer = new NormalRenderer();
-			coordsRenderer = new CoordPlaneRenderer();
+			simpleBaseColorTexRenderer = new SimpleBaseColorTexRenderer(this);
+			simpleBaseColorRenderer = new SimpleBaseColorRenderer(this);
+			phongPerVertexRenderer = new PhongPerVertexRenderer(this);
+			phongPerFragmentRenderer = new PhongPerFragmentRenderer(this);
+			phongTexPerFragmentRenderer = new PhongTexPerFragmentRenderer(this);
+			normalRenderer = new NormalRenderer(this);
+			coordsRenderer = new CoordPlaneRenderer(this);
 			coords = new CoordPlane();
 		} catch (IOException e) {
 			throw new GLException(e);
@@ -153,7 +159,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		BRObjectRenderData renderAssets = new BRObjectRenderData(mesh, material);
 		
 		renderAssets.setRenderer(renderer);
-		gob.setRenderData(renderAssets);
+		gob.setModuleData(moduleId, renderAssets);
 		
 	}
 
@@ -183,7 +189,7 @@ public class BlenderRenderEngine implements RenderEngine {
 		
 		SingleProgramRendererBase previousRenderer = null;
 		for (VisualEntity vobj : scene.getVisualEntities()) {
-			BRObjectRenderData renderData = (BRObjectRenderData) vobj.getRenderData();
+			BRObjectRenderData renderData = (BRObjectRenderData) vobj.getModuleData(moduleId);
 			SingleProgramRendererBase renderer = renderData.getRenderer();
 			if (renderer != previousRenderer) {
 				// TODO [1] remove hack
@@ -215,5 +221,10 @@ public class BlenderRenderEngine implements RenderEngine {
 	@Override
 	public void toggleMeshView() {
 		this.renderMesh = !this.renderMesh;
+	}
+
+	@Override
+	public int getModuleId() {
+		return moduleId;
 	}
 }

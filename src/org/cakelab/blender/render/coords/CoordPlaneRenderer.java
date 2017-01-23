@@ -11,6 +11,7 @@ import java.io.IOException;
 import org.cakelab.blender.render.coords.resources.CoordPlaneResources;
 import org.cakelab.oge.Camera;
 import org.cakelab.oge.app.ApplicationContext;
+import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.FragmentShader;
 import org.cakelab.oge.shader.GLException;
@@ -21,10 +22,9 @@ import org.cakelab.oge.utils.SingleProgramRendererBase;
 
 public class CoordPlaneRenderer extends SingleProgramRendererBase {
 
-
 	private int vao;
 
-	public CoordPlaneRenderer () throws GLException, IOException {
+	public CoordPlaneRenderer (Module module) throws GLException, IOException {
 		
 		loadModel();
 		
