@@ -1,4 +1,4 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.renderers.r3d.straight;
 
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glUniform4f;
@@ -19,31 +19,29 @@ import org.joml.Vector4f;
 
 
 
-public class SimpleBaseColorTexRenderer extends SingleProgramRendererBase {
+public class SimpleBaseColorRenderer extends SingleProgramRendererBase {
 	private int uniform_basecolor;
 	private int module;
 
-	public SimpleBaseColorTexRenderer(Module module) throws GLException, IOException {
+	public SimpleBaseColorRenderer(Module module) throws GLException, IOException {
 		this.module = module.getModuleId();
 		loadShaders();
 		
 	}
 
 
-	private void loadShaders() throws GLException, IOException{
-		VertexShader vs = new VertexShader("basecolor_tex vertex shader", 
-				new FileInputStream("resources/shaders/basecolor_tex/render.vs.glsl"));
-		FragmentShader fs = new FragmentShader("basecolor_tex fragment shader", 
-				new FileInputStream("resources/shaders/basecolor_tex/render.fs.glsl"));
+	private void loadShaders() throws GLException, IOException {
+		VertexShader vs = new VertexShader("basecolor vertex shader", 
+				new FileInputStream("resources/shaders/basecolor/render.vs.glsl"));
+		FragmentShader fs = new FragmentShader("basecolor fragment shader", 
+				new FileInputStream("resources/shaders/basecolor/render.fs.glsl"));
 
-		setShaderProgram(new Program("basecolor_tex shader program", vs, fs));
+		setShaderProgram(new Program("basecolor shader program", vs, fs));
 		
 		vs.delete();
 		fs.delete();
 		
-		String uniform_name = "basecolor";
-		uniform_basecolor = glGetUniformLocation(this.shaderProgram.getProgramId(), uniform_name);
-		if (uniform_basecolor == -1) throw new GLException("uniform attribute "+ uniform_name + " not found");
+		uniform_basecolor = glGetUniformLocation(this.shaderProgram.getProgramId(), "basecolor");
 
 	}
 
@@ -58,9 +56,14 @@ public class SimpleBaseColorTexRenderer extends SingleProgramRendererBase {
 	@Override
 	public void draw(double currentTime, VisualEntity o) {
 		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
-		assets.bind();
 
+		// not the fastest method of course ..
+		assets.bind();
 		Vector4f basecolor = o.getMaterial().getColor();
+		if (assets.getMaterial().isLightEmitting()) {
+			basecolor = new Vector4f(basecolor);
+			basecolor.mul(assets.getMaterial().getEmitterIntensity());
+		}
 		glUniform4f(uniform_basecolor, basecolor.x, basecolor.y, basecolor.z, basecolor.w);
 
 		assets.draw();
@@ -69,6 +72,12 @@ public class SimpleBaseColorTexRenderer extends SingleProgramRendererBase {
 
 	@Override
 	public boolean needsNormals() {
+		return false;
+	}
+
+
+	@Override
+	public boolean needsUv() {
 		return false;
 	}
 

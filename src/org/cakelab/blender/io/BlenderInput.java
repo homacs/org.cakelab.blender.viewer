@@ -375,13 +375,13 @@ public class BlenderInput {
 		CPointer<Material> pmat = mesh.getMat().get();
 		if (pmat == null || !pmat.isValid()) {
 			CArrayFacade<Float> color = ob.getCol();
-			if (color != null && color.length()>=3) {
-				// use color from object data
-				basecolor.set(color.get(0), color.get(1), color.get(2), 1f);
+			if (color != null && color.length() == 4) {
+				basecolor = converter.convertColor(color.get(0), color.get(1), color.get(2), color.get(3));
 			} else {
 				basecolor.set(BLENDER_DEFAULT_COLOR);
 			}
 			emitter_intensity = 0;
+			if (basecolor.w == 0.0) Log.warn("invisible object found (base color alpha = 0)");
 		} else {
 			Material mat = pmat.get();
 			/*
@@ -389,10 +389,7 @@ public class BlenderInput {
 			 * of the object which is mixed with the texture (if present)
 			 * based on the textures alpha channel.
 			 */
-			basecolor.x = mat.getR();
-			basecolor.y = mat.getG();
-			basecolor.z = mat.getB();
-			basecolor.w = mat.getAlpha();
+			basecolor = converter.convertColor(mat.getR(), mat.getG(), mat.getB(), mat.getAlpha());
 			
 			CArrayFacade<CPointer<MTex>> mtexs = mat.getMtex();
 			
@@ -416,7 +413,6 @@ public class BlenderInput {
 				}
 			}
 		}
-
 		return new org.cakelab.oge.scene.Material(basecolor, texture, emitter_intensity);
 	}
 	

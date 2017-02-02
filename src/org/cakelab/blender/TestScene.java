@@ -100,7 +100,7 @@ public class TestScene extends Scene {
 
 
 		@Override
-		public void setPosition(int x, int y, int z) {
+		public void setPosition(float x, float y, float z) {
 		}
 
 		@Override

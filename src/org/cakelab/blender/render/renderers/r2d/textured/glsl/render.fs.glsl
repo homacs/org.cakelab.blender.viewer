@@ -28,6 +28,6 @@ void main(void)
     
     // override base color with texture color based on its alpha value.
 //    color = texcolor*(texcolor.a) + basecolor*(1.0-texcolor.a);
-    color = texcolor + basecolor;
+    color = texcolor * vec4(basecolor.rgb,1);
 //    color.w = 1;
 }

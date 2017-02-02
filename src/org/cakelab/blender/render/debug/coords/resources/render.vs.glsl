@@ -16,7 +16,7 @@ void main(void)
 	int i = gl_VertexID/2;
 	position[i] = gl_VertexID - (i*2);
 	gl_Position = proj_matrix * mv_matrix * position;
-	vec4 color  = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 color  = vec4(0.0, 0.0, 0.0, 1.0);
 	color[i]  = 1.0;
 	vs_out.color = color;
 }

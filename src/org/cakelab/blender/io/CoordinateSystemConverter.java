@@ -74,6 +74,10 @@ public interface CoordinateSystemConverter {
 	 */
 	int convertToTriangles(float[] source, int srcPos, float[] target, int targetPos, int vectorSize, int nvertices);
 
+	Vector4f convertColor(float r, float g, float b, float alpha);
+
+	Vector4f convertColor(float r, float g, float b);
+
 
 
 

@@ -1,4 +1,4 @@
-package org.cakelab.blender.render.coords.resources;
+package org.cakelab.blender.render.debug.coords.resources;
 
 import org.cakelab.appbase.gui.GUIResourcesUtils;
 

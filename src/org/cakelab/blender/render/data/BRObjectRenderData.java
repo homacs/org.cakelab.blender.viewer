@@ -3,10 +3,10 @@ package org.cakelab.blender.render.data;
 
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 
+import org.cakelab.oge.Renderer;
 import org.cakelab.oge.module.ModuleData;
 import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.TextureImage;
-import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.cakelab.soapbox.model.Mesh;
 import org.joml.Vector4f;
 
@@ -17,7 +17,7 @@ public class BRObjectRenderData implements ModuleData {
 	private Mesh mesh;
 
 
-	private SingleProgramRendererBase renderer;
+	private Renderer renderer;
 
 
 	public BRObjectRenderData(Mesh mesh) {
@@ -30,11 +30,11 @@ public class BRObjectRenderData implements ModuleData {
 		this.material = material;
 	}
 	
-	public void setRenderer(SingleProgramRendererBase renderer) {
+	public void setRenderer(Renderer renderer) {
 		this.renderer = renderer;
 	}
 
-	public SingleProgramRendererBase getRenderer() {
+	public Renderer getRenderer() {
 		return renderer;
 	}
 

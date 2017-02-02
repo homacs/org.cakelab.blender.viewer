@@ -1,4 +1,4 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.renderers.r3d.straight;
 
 
 import java.io.FileInputStream;
@@ -58,6 +58,12 @@ public class SimpleTexRenderer extends SingleProgramRendererBase {
 	@Override
 	public boolean needsNormals() {
 		return false;
+	}
+
+
+	@Override
+	public boolean needsUv() {
+		return true;
 	}
 
 }

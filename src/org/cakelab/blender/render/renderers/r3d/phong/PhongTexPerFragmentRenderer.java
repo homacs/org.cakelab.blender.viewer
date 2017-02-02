@@ -1,4 +1,4 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.renderers.r3d.phong;
 
 import static org.lwjgl.opengl.GL20.*;
 
@@ -23,7 +23,7 @@ import org.joml.Vector4f;
 
 
 
-public class PhongPerVertexRenderer extends SingleProgramRendererBase {
+public class PhongTexPerFragmentRenderer extends SingleProgramRendererBase {
 	private int uniform_diffuse_color;
 	private int uniform_specular_color;
 	private int uniform_light_pos;
@@ -32,18 +32,17 @@ public class PhongPerVertexRenderer extends SingleProgramRendererBase {
 	private int module;
 	
 	
-	public PhongPerVertexRenderer(Module module) throws GLException, IOException {
+	public PhongTexPerFragmentRenderer(Module module) throws GLException, IOException {
 		this.module = module.getModuleId();
 		loadShaders();
-		
 	}
 
 	private void loadShaders() throws GLException, IOException{
-		File file = new File("resources/shaders/phonglighting/per-vertex-phong.vs.glsl");
-		VertexShader vs = new VertexShader("per-vertex phong vertex shader", 
+		File file = new File("resources/shaders/phonglighting/per-fragment-phong-tex.vs.glsl");
+		VertexShader vs = new VertexShader("per-fragment-tex phong vertex shader", 
 				new FileInputStream(file));
-		FragmentShader fs = new FragmentShader("per-vertex phong fragment shader", 
-				new FileInputStream("resources/shaders/phonglighting/per-vertex-phong.fs.glsl"));
+		FragmentShader fs = new FragmentShader("per-fragment-tex phong fragment shader", 
+				new FileInputStream("resources/shaders/phonglighting/per-fragment-phong-tex.fs.glsl"));
 		Program program = new Program("phong shader program", vs, fs);
 		setShaderProgram(program);
 		vs.delete();
@@ -81,6 +80,7 @@ public class PhongPerVertexRenderer extends SingleProgramRendererBase {
 	@Override
 	public void draw(double currentTime, VisualEntity o) {
 		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
+		assets.bind();
 
 		assets.bind();
 		// TODO mix material color with light color
@@ -94,6 +94,11 @@ public class PhongPerVertexRenderer extends SingleProgramRendererBase {
 
 	@Override
 	public boolean needsNormals() {
+		return true;
+	}
+
+	@Override
+	public boolean needsUv() {
 		return true;
 	}
 

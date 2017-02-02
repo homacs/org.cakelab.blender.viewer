@@ -9,6 +9,7 @@ import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.io.BlenderInput;
 import org.cakelab.blender.render.BlenderRenderEngine;
 import org.cakelab.oge.Camera;
+import org.cakelab.oge.DebugView;
 import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.app.ApplicationBase;
 import org.cakelab.oge.app.ApplicationContext;
@@ -23,6 +24,7 @@ public class BlenderViewer extends ApplicationBase {
 	private Scene scene;
 	private MovementAdapter userMovement;
 	private Camera camera;
+	private DebugView debugView;
 
 	
 	// TODO support switching between fullscreen and windowed mode
@@ -32,10 +34,12 @@ public class BlenderViewer extends ApplicationBase {
 		Log.addLogListener(new ConsoleLog());
 
 		engine = new BlenderRenderEngine();
+		debugView = engine.getDebugView();
+		
 		
 		info.settings.fullscreen = true;
 		info.settings.vsync = true;
-		info.settings.fps = 0; // off
+		info.settings.fps = 0; // off (i.e. set to monitor refresh rate)
 		info.settings.softwareThrottle = false;
 //		createFreeCam();
 		createHeadCam();
@@ -46,6 +50,7 @@ public class BlenderViewer extends ApplicationBase {
 
 //		scene = new TestScene(userMovement);
 
+		toggleDebugView();
 	}
 
 	private void createHeadCam() {
@@ -77,6 +82,7 @@ public class BlenderViewer extends ApplicationBase {
 	@Override
 	protected void startup() throws Throwable {
 		engine.setup(scene);
+
 		setVirtualCursor(true);
 	}
 
@@ -124,10 +130,8 @@ public class BlenderViewer extends ApplicationBase {
 	            	break;
 	            case 'E': userMovement.addRotationVelocity(0f, 0f, move*5);
             		break;
-	            case 'N': if ((action == GLFW.GLFW_PRESS)) engine.toggleNormalView();
+	            case GLFW.GLFW_KEY_F12: if ((action == GLFW.GLFW_PRESS)) toggleDebugView();
         			break;
-	            case 'M': if ((action == GLFW.GLFW_PRESS)) engine.toggleMeshView();
-	            	break;
 	            case GLFW.GLFW_KEY_LEFT_SHIFT:
 	            case GLFW.GLFW_KEY_RIGHT_SHIFT:
 	            	userMovement.setVelocityMultiplyier(((action == GLFW.GLFW_PRESS) ? 2.0f : 1.0f));
@@ -146,6 +150,10 @@ public class BlenderViewer extends ApplicationBase {
 
 	}
 
+
+	private void toggleDebugView() {
+		debugView.setVisible(!debugView.isVisible());
+	}
 
 	@Override
 	protected synchronized void onMouseMove(double xpos, double ypos, double xmov, double ymov) {

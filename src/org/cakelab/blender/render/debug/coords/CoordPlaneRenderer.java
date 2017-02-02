@@ -1,4 +1,4 @@
-package org.cakelab.blender.render.coords;
+package org.cakelab.blender.render.debug.coords;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 import java.io.IOException;
 
-import org.cakelab.blender.render.coords.resources.CoordPlaneResources;
+import org.cakelab.blender.render.debug.coords.resources.CoordPlaneResources;
 import org.cakelab.oge.Camera;
 import org.cakelab.oge.app.ApplicationContext;
 import org.cakelab.oge.module.Module;
@@ -74,6 +74,11 @@ public class CoordPlaneRenderer extends SingleProgramRendererBase {
 
 	@Override
 	public boolean needsNormals() {
+		return false;
+	}
+
+	@Override
+	public boolean needsUv() {
 		return false;
 	}
 

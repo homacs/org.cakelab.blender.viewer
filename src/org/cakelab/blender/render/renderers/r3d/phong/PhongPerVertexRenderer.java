@@ -1,4 +1,4 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.renderers.r3d.phong;
 
 import static org.lwjgl.opengl.GL20.*;
 
@@ -23,7 +23,7 @@ import org.joml.Vector4f;
 
 
 
-public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
+public class PhongPerVertexRenderer extends SingleProgramRendererBase {
 	private int uniform_diffuse_color;
 	private int uniform_specular_color;
 	private int uniform_light_pos;
@@ -32,18 +32,18 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	private int module;
 	
 	
-	public PhongPerFragmentRenderer(Module module) throws GLException, IOException {
+	public PhongPerVertexRenderer(Module module) throws GLException, IOException {
 		this.module = module.getModuleId();
 		loadShaders();
+		
 	}
 
 	private void loadShaders() throws GLException, IOException{
-		File file = new File("resources/shaders/phonglighting/per-fragment-phong.vs.glsl");
-		
-		VertexShader vs = new VertexShader("per-fragment phong vertex shader", file);
-		
-		FragmentShader fs = new FragmentShader("per-fragment phong fragment shader", 
-				new FileInputStream("resources/shaders/phonglighting/per-fragment-phong.fs.glsl"));
+		File file = new File("resources/shaders/phonglighting/per-vertex-phong.vs.glsl");
+		VertexShader vs = new VertexShader("per-vertex phong vertex shader", 
+				new FileInputStream(file));
+		FragmentShader fs = new FragmentShader("per-vertex phong fragment shader", 
+				new FileInputStream("resources/shaders/phonglighting/per-vertex-phong.fs.glsl"));
 		Program program = new Program("phong shader program", vs, fs);
 		setShaderProgram(program);
 		vs.delete();
@@ -64,7 +64,7 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	
 	@Override
 	public void prepareRenderPass(ApplicationContext context, double currentTime) {
-		// TODO support multiple light sources and missing light sources
+		// TODO support multiple light sources
 		ArrayList<LightSource> activeLamps = context.getActiveLamps();
 		LightSource light = activeLamps.get(0);
 		Vector3f light_color = light.getColor();
@@ -81,18 +81,25 @@ public class PhongPerFragmentRenderer extends SingleProgramRendererBase {
 	@Override
 	public void draw(double currentTime, VisualEntity o) {
 		BRObjectRenderData assets = (BRObjectRenderData) o.getModuleData(module);
+
 		assets.bind();
 		// TODO mix material color with light color
 		// TODO mix material specular with light color?
+
 		Vector4f basecolor = o.getMaterial().getColor();
 		glUniform3f(uniform_diffuse_color, basecolor.x, basecolor.y, basecolor.z);
-		
+
 		assets.draw();
 	}
 
 	@Override
 	public boolean needsNormals() {
 		return true;
+	}
+
+	@Override
+	public boolean needsUv() {
+		return false;
 	}
 
 }

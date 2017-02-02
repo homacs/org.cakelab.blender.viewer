@@ -211,5 +211,18 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		array[offset + 3] = vec.w;
 	}
 
+	
+	
+	
+	@Override
+	public Vector4f convertColor(float r, float g, float b, float a) {
+		return new Vector4f(r,g,b,a);
+	}
+
+	@Override
+	public Vector4f convertColor(float r, float g, float b) {
+		return new Vector4f(r,g,b,1.f);
+	}
+
 
 }

@@ -27,4 +27,5 @@ void main(void)
 {
     vs_out.tc = tc;
     gl_Position = proj_matrix * mv_matrix * position; 
+//    gl_Position = proj_matrix * position; 
 }

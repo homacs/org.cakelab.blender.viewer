@@ -1,4 +1,4 @@
-package org.cakelab.blender.render;
+package org.cakelab.blender.render.debug.normals;
 
 import static org.lwjgl.opengl.GL20.*;
 
@@ -31,6 +31,7 @@ public class NormalRenderer extends SingleProgramRendererBase {
 
 
 	private void loadShaders() throws GLException, IOException {
+		// TODO move shaders in files
 		VertexShader vs = new VertexShader("normal viewer vertex shader", 
 				"#version 410 core                                                  \n" +
 	            "                                                                   \n" +
@@ -155,6 +156,12 @@ public class NormalRenderer extends SingleProgramRendererBase {
 	@Override
 	public boolean needsNormals() {
 		return true;
+	}
+
+
+	@Override
+	public boolean needsUv() {
+		return false;
 	}
 
 }
