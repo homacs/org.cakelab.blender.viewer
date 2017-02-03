@@ -76,21 +76,24 @@ public class TextMeshBuffer {
 			newLine();
 			break;
 		default:
-			write(c, x, y);
+			drawChar(c);
 			break;
 		}
 		
 		return this;
 	}
 
-	
+	private void drawChar(char c) {
+		glyphAtlas.getUvCoords(c, uv, uvW);
+		writeQuad(c, x, y, w, h, uv, uvW);
+		x += xAdv;
+	}
 	
 	/**
 	 * write character at current position
 	 * @param c
 	 */
-	private void write(char c, float x, float y) {
-		glyphAtlas.getUvCoords(c, uv, uvW);
+	private void writeQuad(char c, float x, float y, float w, float h, Vector2f uv, Vector2f uvW) {
 
 		// first triangle 
 		
