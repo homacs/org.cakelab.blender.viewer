@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="package" name="Create Package of JavaBlendDemo Binary Version">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+	<target name="init">
+		<property name="version" value="1.1.0"/>
+		<property name="workspace" value="${user.home}/repos/svn/cakelab.org/playground"/>
+		<property name="web.downloads" value="${user.home}/tmp/public_html/projects/JavaBlend/demo/downloads"/>
+		<property name="project.name" value="JavaBlendViewer"/>
+        <property name="workdir" value="${java.io.tmpdir}/${project.name}-${version}"/>
+		<property name="zipfile" value="${web.downloads}/${project.name}-${version}.zip"/>
+		<delete failonerror="false" includeEmptyDirs="true">
+			<fileset dir="${workdir}"/>
+			<fileset file="${zipfile}"/>
+		</delete>
+        <mkdir dir="${workdir}"/>
+	</target>
+    <target name="create_run_jar" depends="init">
+        <jar destfile="${workdir}/JavaBlendViewer.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="org.cakelab.blender.BlenderViewer"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${workspace}/JavaBlendViewer/bin"/>
+            <fileset dir="${workspace}/org.cakelab.blender.io/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.blender.io/lib/commons-compress-1.10/commons-compress-1.10.jar"/>
+            <fileset dir="${workspace}/org.cakelab.json/bin"/>
+            <fileset dir="${workspace}/org.cakelab.soapbox/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/joml-1.9.1/joml-1.9.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-glfw.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-jemalloc.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-openal.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-opencl.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-opengl.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl-stb.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/jar/lwjgl.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/native/linux/lwjgl-glfw-natives-linux.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/native/linux/lwjgl-jemalloc-natives-linux.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/native/linux/lwjgl-natives-linux.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/native/linux/lwjgl-openal-natives-linux.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${workspace}/org.cakelab.soapbox/lib/lwjgl-3.1.0/native/linux/lwjgl-stb-natives-linux.jar"/>
+            <fileset dir="${workspace}/AppBase/bin"/>
+        </jar>
+    </target>
+	<target name="copy_resources" depends="init">
+		<copy todir="${workdir}">
+			<fileset dir="packaging" casesensitive="yes">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<copy todir="${workdir}">
+			<fileset dir="." casesensitive="yes">
+				<include name="resources/**/*"/>
+				<include name="examples/**/*"/>
+				<include name="doc/**/*"/>
+			</fileset>
+		</copy>
+	</target>
+	<target name="package" depends="copy_resources,create_run_jar">
+		<zip destfile="${zipfile}" basedir="${java.io.tmpdir}">
+			<include name="${project.name}-${version}/**/*"/>
+		</zip>
+	</target>
+</project>

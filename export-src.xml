@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="package" name="Package Sources for JavaBlendViewer">
+	<target name="init">
+		<property name="version" value="1.1.0"/>
+		<property name="repobasedir" value="${user.home}/repos/svn/cakelab.org/playground"/>
+		<property name="web.downloads" value="${user.home}/tmp/public_html/projects/JavaBlend/demo/downloads"/>
+		<property name="project.name" value="JavaBlendViewer"/>
+        <property name="workdir" value="${java.io.tmpdir}/${project.name}-${version}"/>
+		<property name="zipfile" value="${web.downloads}/${project.name}-${version}.zip"/>
+		<delete failonerror="false" includeEmptyDirs="true">
+			<fileset dir="${workdir}"/>
+			<fileset file="${zipfile}"/>
+		</delete>
+        <mkdir dir="${workdir}"/>
+	</target>
+	<target name="copy-resources" depends="init">
+		<copy todir="${workdir}">
+            <fileset dir="${repobasedir}/JavaBlendViewer">
+            	<include name="src/**/*.java"/>
+            	<include name="jb-examples/**/*.java"/>
+            	<include name="gen/**/*.java"/>
+				<include name="resources/**/*"/>
+				<include name="examples/**/*"/>
+				<include name="doc/**/*"/>
+            </fileset>
+            <fileset dir="${repobasedir}/org.cakelab.blender.io">
+            	<exclude name="src/org/cakelab/blender/doc/extract/**/*.java"/>
+            	<include name="src/**/*"/>
+            </fileset>
+            <fileset dir="${repobasedir}/org.cakelab.json">
+            	<include name="src/**/*"/>
+            </fileset>
+            <fileset dir="${repobasedir}/org.cakelab.soapbox">
+	        	<include name="src/**/*"/>
+	        	<include name="lib/**/*"/>
+	        </fileset>
+            <fileset dir="${repobasedir}/AppBase">
+            	<include name="src/**/*"/>
+            </fileset>
+		</copy>
+	</target>
+	<target name="package" depends="init,copy-resources">
+		<zip destfile="${zipfile}" 
+			basedir="${java.io.tmpdir}"
+			includes="${project.name}-${version}/**"
+			update="true">
+		</zip>
+	</target>
+</project>

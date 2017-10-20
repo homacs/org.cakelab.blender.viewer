@@ -1,17 +1,5 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_CCW;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.GL_LEQUAL;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glDepthFunc;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glFrontFace;
-
 import java.io.IOException;
 
 import org.cakelab.appbase.log.Log;
@@ -20,26 +8,18 @@ import org.cakelab.blender.render.data.BRMeshRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
 import org.cakelab.blender.render.data.BRTextureRenderData;
 import org.cakelab.blender.render.renderers.RendererLibrary;
-import org.cakelab.blender.render.renderers.r3d.phong.PhongPerFragmentRenderer;
-import org.cakelab.blender.render.renderers.r3d.phong.PhongPerVertexRenderer;
-import org.cakelab.blender.render.renderers.r3d.phong.PhongTexPerFragmentRenderer;
-import org.cakelab.blender.render.renderers.r3d.straight.SimpleBaseColorRenderer;
-import org.cakelab.blender.render.renderers.r3d.straight.SimpleBaseColorTexRenderer;
-import org.cakelab.oge.opengl.MeshVertexArray;
-import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.Renderer;
 import org.cakelab.oge.module.Module;
+import org.cakelab.oge.opengl.MeshVertexArray;
 import org.cakelab.oge.opengl.BufferObject.Usage;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.Material;
-import org.cakelab.oge.scene.Scene;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.texture.GPUTexture;
 import org.cakelab.oge.texture.TextureImageIO;
-import org.cakelab.oge.utils.SingleProgramRendererBase;
 import org.cakelab.soapbox.model.Mesh;
 import org.lwjgl.opengl.GL11;
 
@@ -102,7 +82,7 @@ public class RenderSetup {
 		if (renderer.needsNormals()) {
 			int normalsOffset = mesh.getNormalsOffset();
 			assert(mesh.hasNormals());
-			vao.declareVertexAttribute(VERTEX_ATTRIBUTE_NORMAL, normalsOffset, 3);
+			vao.declareAttribute(VERTEX_ATTRIBUTE_NORMAL, normalsOffset, 3);
 		}
 
 		mesh.setRenderData(new BRMeshRenderData(vao));
@@ -118,7 +98,7 @@ public class RenderSetup {
 		int attrIdxTexCoord = VERTEX_ATTRIBUTE_UV;
 		int uvOffset 	    = mesh.getUVOffset(); /* offset to uv coords in each vector */
 		int size 		    = 2;
-		vao.declareVertexAttribute(attrIdxTexCoord, uvOffset, size);
+		vao.declareAttribute(attrIdxTexCoord, uvOffset, size);
 		
 		
 		GPUTexture gpuTexture = createGPUTexture(textureImage);

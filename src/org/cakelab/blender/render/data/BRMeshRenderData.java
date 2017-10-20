@@ -1,13 +1,13 @@
 package org.cakelab.blender.render.data;
 
 import org.cakelab.oge.module.ModuleData;
-import org.cakelab.oge.opengl.VertexArrayObject;
+import org.cakelab.oge.opengl.VertexArray;
 
 public class BRMeshRenderData implements ModuleData {
 
-	private VertexArrayObject vao;
+	private VertexArray vao;
 
-	public BRMeshRenderData(VertexArrayObject vertexArrayObject) {
+	public BRMeshRenderData(VertexArray vertexArrayObject) {
 		this.vao = vertexArrayObject;
 	}
 
@@ -20,7 +20,7 @@ public class BRMeshRenderData implements ModuleData {
 		vao.delete(true);
 	}
 
-	public VertexArrayObject getVertexArrayObject() {
+	public VertexArray getVertexArrayObject() {
 		return vao;
 	}
 

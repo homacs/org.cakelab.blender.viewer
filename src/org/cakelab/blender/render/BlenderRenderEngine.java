@@ -1,14 +1,22 @@
 package org.cakelab.blender.render;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_CCW;
+import static org.lwjgl.opengl.GL11.GL_COLOR;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_DEPTH;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_LEQUAL;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glDepthFunc;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glFrontFace;
+import static org.lwjgl.opengl.GL11.glViewport;
 
-import java.io.IOException;
-
-import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.render.data.BRLightRenderData;
-import org.cakelab.blender.render.data.BRMeshRenderData;
 import org.cakelab.blender.render.data.BRObjectRenderData;
-import org.cakelab.blender.render.data.BRTextureRenderData;
 import org.cakelab.blender.render.debug.DebugInterface;
 import org.cakelab.blender.render.renderers.r3d.Renderer3DLibrary;
 import org.cakelab.oge.DebugView;
@@ -16,22 +24,13 @@ import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.Renderer;
 import org.cakelab.oge.app.ApplicationContext;
 import org.cakelab.oge.module.ModuleRegistry;
-import org.cakelab.oge.opengl.BufferObject.Usage;
-import org.cakelab.oge.opengl.MeshVertexArray;
-import org.cakelab.oge.scene.Material;
-import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.LightSource;
 import org.cakelab.oge.scene.Scene;
-import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.scene.VisualEntity;
+import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.shader.GLException;
-import org.cakelab.oge.texture.GPUTexture;
-import org.cakelab.oge.texture.TextureImageIO;
 import org.cakelab.oge.utils.BufferedMatrix4f;
 import org.cakelab.oge.utils.GLAPIHelper;
-import org.cakelab.oge.utils.SingleProgramRendererBase;
-import org.cakelab.soapbox.model.Mesh;
-import org.lwjgl.opengl.GL11;
 
 public class BlenderRenderEngine implements RenderEngine {
 	

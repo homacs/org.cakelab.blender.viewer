@@ -19,6 +19,9 @@ import org.cakelab.soapbox.MovementAdapter;
 import org.cakelab.soapbox.FreeCamera;
 import org.cakelab.soapbox.Player;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+
 public class BlenderViewer extends ApplicationBase {
 	private RenderEngine engine;
 	private Scene scene;
@@ -81,6 +84,9 @@ public class BlenderViewer extends ApplicationBase {
 
 	@Override
 	protected void startup() throws Throwable {
+		System.out.println("GL_MAX_VERTEX_ATTRIBS: " + GL11.glGetInteger(GL20.GL_MAX_VERTEX_ATTRIBS));
+		
+		
 		engine.setup(scene);
 
 		setVirtualCursor(true);
@@ -106,7 +112,7 @@ public class BlenderViewer extends ApplicationBase {
 
 
 	@Override
-	protected synchronized void onKey(int key, int scancode, int action, int mods)
+	protected void onKey(int key, int scancode, int action, int mods)
 			throws Throwable {
 	    if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_RELEASE)
 	    {
@@ -130,7 +136,7 @@ public class BlenderViewer extends ApplicationBase {
 	            	break;
 	            case 'E': userMovement.addRotationVelocity(0f, 0f, move*5);
             		break;
-	            case GLFW.GLFW_KEY_F12: if ((action == GLFW.GLFW_PRESS)) toggleDebugView();
+	            case GLFW.GLFW_KEY_F1: if ((action == GLFW.GLFW_PRESS)) toggleDebugView();
         			break;
 	            case GLFW.GLFW_KEY_LEFT_SHIFT:
 	            case GLFW.GLFW_KEY_RIGHT_SHIFT:
@@ -156,7 +162,7 @@ public class BlenderViewer extends ApplicationBase {
 	}
 
 	@Override
-	protected synchronized void onMouseMove(double xpos, double ypos, double xmov, double ymov) {
+	protected void onMouseMove(double xpos, double ypos, double xmov, double ymov) {
 		double f = 0.03;
 		if (xmov != 0 || ymov != 0) {
 			/* In screen space Y is upside down but X is as normal.
@@ -173,7 +179,7 @@ public class BlenderViewer extends ApplicationBase {
 	}
 
 	@Override
-	protected synchronized void onResize(int w, int h) throws Throwable {
+	protected void onResize(int w, int h) throws Throwable {
 		super.onResize(w, h);
 		engine.setView(w, h, camera.getFoV());
 	}

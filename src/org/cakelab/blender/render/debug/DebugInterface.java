@@ -60,6 +60,14 @@ public class DebugInterface implements DebugView, RenderEngine {
 			coordsRenderer = new CoordPlaneRenderer(this);
 			coords = new CoordPlane();
 			console = new ConsoleControl(this, owner.getRenderSetup());
+			
+			console.setText(  
+					  "   ----   KEYS   ----\n"
+					+ "F1          - Help/Debug\n"
+					+ "ESC         - Exit\n"
+					+ "W/A/S/D     - Move\n"
+					+ "R/F         - Up/Down");
+			
 		} catch (IOException e) {
 			throw new GLException(e);
 		}
@@ -81,6 +89,8 @@ public class DebugInterface implements DebugView, RenderEngine {
 		coords.setPosition(X/2*.8f,-Y/2*.8f,-Z);
 		ratio *= 0.025f;
 		coords.setScale(ratio, ratio, ratio);
+
+		console.setView(width,height);
 	}
 
 	@Override

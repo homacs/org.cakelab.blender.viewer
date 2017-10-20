@@ -30,7 +30,15 @@ public class Frame extends VisualMeshEntity {
 	public void setSize(int width, int height) {
 		super.setScale(width, height, 1f);
 	}
+	
+	public int getWidth() {
+		return width;
+	}
 
+	public int getHeight() {
+		return height;
+	}
+	
 	public void setPosition(int x, int y) {
 		super.setPosition(x,-y,0);
 	}

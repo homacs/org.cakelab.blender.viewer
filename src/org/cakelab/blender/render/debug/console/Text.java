@@ -20,7 +20,7 @@ public class Text extends VisualMeshEntity implements DynamicEntity {
 
 	
 
-	public Text(int height, int width) {
+	public Text(int width, int height) {
 		super();
 		
 		
@@ -31,17 +31,7 @@ public class Text extends VisualMeshEntity implements DynamicEntity {
 		
 		super.material = new Material(textcolor, tex, 1f);
 
-		buffer = new TextMeshBuffer(glyphAtlas);
-		
-
-		buffer.append(
-				  "Hello, World!\n"
-				+ "The quick brown fox jumps\n"
-				+ "over the  fence to lock a\n"
-				+ "monitor!");
-		
-		super.mesh = buffer.toMesh();
-		
+		setText("");
 //		super.mesh = glyphAtlas.createDebugText();
 //		super.mesh = glyphAtlas.createDebugTableMesh();
 		
@@ -51,7 +41,14 @@ public class Text extends VisualMeshEntity implements DynamicEntity {
 		super.setPosition(x,-y,0);
 	}
 
+	public void setText(String text) {
+		// TODO: optimise text rendering
+		buffer = new TextMeshBuffer(glyphAtlas);
 
+		buffer.append(text);
+		
+		super.mesh = buffer.toMesh();
+	}
 	
 	@Override
 	public void update(double currentTime) {

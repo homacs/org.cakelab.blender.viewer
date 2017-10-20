@@ -13,34 +13,61 @@ import org.cakelab.oge.shader.GLException;
 
 
 public class ConsoleControl {
+	// TODO: text console
 	
 	private boolean active;
 
 	private Frame frame;
 	private Text text;
 
+	
+	private int width = 230;
+	private int height = 80;
+
+	private RenderSetup setup2d;
 	private Module module;
 
 	public ConsoleControl(Module module, RenderSetup setup) throws GLException, IOException {
 		super();
 		this.module = module;
 		
-		RenderSetup setup2d = new RenderSetup(module, new Renderer2DLibrary(module)); 
+		setup2d = new RenderSetup(module, new Renderer2DLibrary(module)); 
 		
 		
-		int width = 256;
-		int height = 70;
 		
 		frame = new Frame(width, height);
 		setup2d.setup(frame);
-		text = new Text(height, width);
+		text = new Text(width, height);
 		setup2d.setup(text);
-		
+
+		// initially we put the console in the centre
 		frame.setPosition(-width/2, -height/2);
 		text.setPosition(-width/2, -height/2);
 		active = true;
 	}
 
+	/** updates position of the console on changes to window size */
+	public void setView(int winWidth, int winHeight) {
+		int x = -winWidth/2;
+		int y = -winHeight/2;
+		int horizontal_border = 15;
+		int vertical_border = 5;
+		frame.setPosition(x, y);
+		text.setPosition(x+horizontal_border, y+vertical_border);
+	}
+	
+
+	public void setText(String _text) {
+		text.setText(_text);
+		try {
+			// update mesh
+			setup2d.setup(text);
+		} catch (GLException e) {
+			// TODO throw?
+			e.printStackTrace();
+		}
+
+	}
 
 	public boolean isActive() {
 		return active;
@@ -64,6 +91,7 @@ public class ConsoleControl {
 		renderer.render(context, currentTime, o);
 		
 	}
-	
+
+
 
 }

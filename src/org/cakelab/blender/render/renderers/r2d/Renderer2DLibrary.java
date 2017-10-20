@@ -10,7 +10,6 @@ import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.Material;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.GLException;
-import org.cakelab.soapbox.model.Mesh;
 
 public class Renderer2DLibrary implements RendererLibrary {
 
