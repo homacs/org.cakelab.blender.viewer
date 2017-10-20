@@ -1066,7 +1066,8 @@ public class ExampleCopybufferExchange {
 	private static PreviewImage createPreviewImage(int width, int height, byte[] data, int iconId, short[] changedTmstmp) throws IOException {
 		PreviewImage img = factory.newCStructBlock(BlockCodes.ID_DATA, PreviewImage.class);
 		
-		img.setUse_deferred((byte) 0);
+		// FIXME: deprecated?
+		// img.setUse_deferred((byte) 0);
 		
 		img.getGputexture().set(0, Null);
 		img.getGputexture().set(1, Null);
