@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="package" name="Package Sources for JavaBlendViewer">
 	<target name="init">
-		<property name="version" value="1.1.1"/>
+		<property name="version" value="0.0.1"/>
 		<property name="repobasedir" value="${user.home}/repos/svn/cakelab.org/playground"/>
 		<property name="web.downloads" value="${user.home}/tmp/public_html/projects/JavaBlendViewer/downloads"/>
 		<property name="project.name" value="JavaBlendViewer"/>
-        <property name="workdir" value="${java.io.tmpdir}/${project.name}-${version}"/>
-		<property name="zipfile" value="${web.downloads}/${project.name}-${version}.zip"/>
+		<property name="file.name" value="${project.name}-src-${version}"/>
+        <property name="workdir" value="${java.io.tmpdir}/${file.name}"/>
+		<property name="zipfile" value="${web.downloads}/${file.name}.zip"/>
 		<delete failonerror="false" includeEmptyDirs="true">
 			<fileset dir="${workdir}"/>
 			<fileset file="${zipfile}"/>
@@ -45,7 +46,7 @@
 	<target name="package" depends="init,copy-resources">
 		<zip destfile="${zipfile}" 
 			basedir="${java.io.tmpdir}"
-			includes="${project.name}-${version}/**"
+			includes="${file.name}/**"
 			update="true">
 		</zip>
 	</target>
