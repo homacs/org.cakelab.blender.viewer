@@ -117,8 +117,6 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		// and finally turn the coordinate system back into our system. The result is a
 		// quaternion ready to be used in our coordinate system.
 		
-		
-		
 		Quaternionf rotation = new Quaternionf();
 		
 		rotation.mul(this.rotationTransform);

@@ -123,7 +123,7 @@ public class BlenderInput {
 				cameras.add(loadCamera(ob));
 				break;
 			case OB_LAMP:
-				scene.addLightSource(loadLamp(ob));
+				scene.add(loadLamp(ob));
 				break;
 			case OB_MESH:
 				scene.add(loadMesh(ob));
