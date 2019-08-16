@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 
+import org.blender.dna.ListBase;
 import org.cakelab.blender.nio.CPointer;
 
 public class BlenderListIterator<T> implements Iterator<T> {
@@ -41,6 +42,11 @@ public class BlenderListIterator<T> implements Iterator<T> {
 		}
 		return new BlenderListIterator<T>(list);
 	}
+	public static <T> Iterator<T> create(ListBase listBase, Class<T> elemType) throws IOException {
+		CPointer<T> first = listBase.getFirst().cast(elemType);
+		return create(first);
+	}
+
 
 	@Override
 	public boolean hasNext() {

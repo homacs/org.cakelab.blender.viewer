@@ -19,6 +19,19 @@ public class ExampleCreateNewBlocks {
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws IOException {
+		/*
+		 * DISCLAIMER
+		 * ----------
+		 * 
+		 * This is just an example to demonstrate the use of the 
+		 * factory functions to create blocks for a .blend file.
+		 * 
+		 * The output is cannot be displayed by blender, because 
+		 * it lacks a lot of other information besides the actual 
+		 * model too.
+		 * 
+		 */
+		
 		BlenderFile blend = newBlenderFile(new File("my.blend"));
 		
 		//

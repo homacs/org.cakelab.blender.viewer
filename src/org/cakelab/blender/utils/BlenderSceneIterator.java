@@ -6,6 +6,14 @@ import java.util.Iterator;
 import org.blender.dna.Base;
 import org.blender.dna.Scene;
 
+/**
+ * 
+ * 
+ * 
+ * @deprecated Since 2.80 most of the relevant scene content is organised in collections. 
+ * @author homac
+ *
+ */
 public class BlenderSceneIterator implements Iterator<Base> {
 	// TODO study what scene iterator actually has to iterate
 	

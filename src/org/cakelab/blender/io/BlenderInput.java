@@ -3,6 +3,8 @@ package org.cakelab.blender.io;
 import static org.blender.dna.constants.object.Constants.*;
 import static org.blender.dna.constants.mesh.Constants.*;
 import static org.blender.dna.constants.vfont.Constants.*;
+import static org.blender.dna.constants.BKE_node.*;
+import static org.blender.dna.constants.constraints.eBConstraint_Types.*;
 
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -11,42 +13,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
-import org.blender.dna.Base;
-import org.blender.dna.BlenderObject;
-import org.blender.dna.Camera;
-import org.blender.dna.Curve;
-import org.blender.dna.Image;
-import org.blender.dna.ImagePackedFile;
-import org.blender.dna.Lamp;
-import org.blender.dna.ListBase;
-import org.blender.dna.MLoop;
-import org.blender.dna.MLoopUV;
-import org.blender.dna.MPoly;
-import org.blender.dna.MTex;
-import org.blender.dna.MVert;
-import org.blender.dna.Material;
-import org.blender.dna.Mesh;
-import org.blender.dna.PackedFile;
-import org.blender.dna.Scene;
-import org.blender.dna.Tex;
-import org.blender.dna.VFont;
-import org.blender.dna.bChildOfConstraint;
-import org.blender.dna.bConstraint;
-import org.blender.dna.constants.constraints.eBConstraint_Types;
+import org.blender.dna.*;
 import org.blender.utils.MainLib;
 import org.cakelab.appbase.log.Log;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
-import org.cakelab.blender.utils.BlenderListIterator;
-import org.cakelab.blender.utils.BlenderSceneIterator;
+import org.cakelab.blender.utils.*;
 import org.cakelab.oge.scene.Pose;
 import org.cakelab.oge.scene.TextureImage;
-import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.oge.scene.VisualEntity;
+import org.cakelab.oge.scene.VisualMeshEntity;
 import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
 import org.cakelab.soapbox.model.TriangleMesh;
 import org.joml.Quaternionf;
@@ -109,11 +90,26 @@ public class BlenderInput {
 		
 		org.cakelab.oge.scene.Scene scene = new org.cakelab.oge.scene.Scene();
 		Scene bscene = main.getScene();
-		BlenderSceneIterator base_it = new BlenderSceneIterator(bscene);
-		while (base_it.hasNext()) {
-			Base base = base_it.next();
-			BlenderObject ob = base.getObject().get();
+
+		// Traverse master collection and gather objects
+		Collection collection = bscene.getMaster_collection().get();
+		traverseCollection(collection, selectedLayers, scene);
+		
+
+		resolveParentChildRelations();
+		return scene;
+	}
+	
+	private void traverseCollection(Collection collection, int selectedLayers, org.cakelab.oge.scene.Scene scene) throws IOException {
+
+		Iterator<CollectionObject> it_gobj = BlenderListIterator.create(collection.getGobject(), CollectionObject.class);
+		while (it_gobj.hasNext()) {
+			CollectionObject gobj = it_gobj.next();
+			BlenderObject ob = gobj.getOb().get();
 			
+			if (ob == null) {
+				continue;
+			}
 			if ((ob.getLay() & selectedLayers) == 0) {
 				continue;
 			}
@@ -136,11 +132,17 @@ public class BlenderInput {
 				// TODO etc
 			}
 		}
+		
+		
+		Iterator<CollectionChild> it_child = BlenderListIterator.create(collection.getChildren(), CollectionChild.class);
+		while(it_child.hasNext()) {
+			CollectionChild child = it_child.next();
+			Collection childCollection = child.getCollection().get();
+			if (childCollection != null) traverseCollection(childCollection, selectedLayers, scene);
+		}
 
-		resolveParentChildRelations();
-		return scene;
 	}
-	
+
 	private void loadText(BlenderObject ob) throws IOException {
 		// TODO [6] text and curves
 		// does not work yet
@@ -226,7 +228,7 @@ public class BlenderInput {
 			BlenderListIterator<bConstraint> cit = new BlenderListIterator<bConstraint>(c);
 			while (cit.hasNext()) {
 				c = cit.next();
-				if (c.getType() == eBConstraint_Types.CONSTRAINT_TYPE_CHILDOF.v) {
+				if (c.getType() == CONSTRAINT_TYPE_CHILDOF.v) {
 					bChildOfConstraint childof = c.getData().cast(bChildOfConstraint.class).get();
 					parent = childof.getTar().get();
 					registerChild(parent, pose);
@@ -364,7 +366,6 @@ public class BlenderInput {
 	
 	private org.cakelab.oge.scene.Material getMaterial(BlenderObject ob, Mesh mesh) throws IOException {
 		Vector4f basecolor = new Vector4f(0,0,0,1);
-		TextureImage texture = null;
 		float emitter_intensity = 0f;
 		
 		short totcol = mesh.getTotcol();
@@ -373,6 +374,8 @@ public class BlenderInput {
 			throw new IOException("mesh with multiple materials not supported");
 		}
 		CPointer<Material> pmat = mesh.getMat().get();
+		org.cakelab.oge.scene.Material material;
+
 		if (pmat == null || !pmat.isValid()) {
 			CArrayFacade<Float> color = ob.getCol();
 			if (color != null && color.length() == 4) {
@@ -382,40 +385,71 @@ public class BlenderInput {
 			}
 			emitter_intensity = 0;
 			if (basecolor.w == 0.0) Log.warn("invisible object found (base color alpha = 0)");
+			material = new org.cakelab.oge.scene.Material(basecolor, null, emitter_intensity);
 		} else {
 			Material mat = pmat.get();
-			/*
-			 * we interpret the colour of the material as base colour
-			 * of the object which is mixed with the texture (if present)
-			 * based on the textures alpha channel.
-			 */
-			basecolor = converter.convertColor(mat.getR(), mat.getG(), mat.getB(), mat.getAlpha());
 			
-			CArrayFacade<CPointer<MTex>> mtexs = mat.getMtex();
+			basecolor = converter.convertColor(mat.getR(), mat.getG(), mat.getB(), mat.getA());
+			material = new org.cakelab.oge.scene.Material(basecolor);
+			if (mat.getUse_nodes() != 0) {
+				readNodes(mat, material);
+				// reset color if there is a texture
+				if (material.hasTextures()) {
+					material.setColor(new Vector4f(0,0,0,1));
+				}
+			}
 			
-			emitter_intensity = mat.getEmit();
-			
-//			if (mtexs.length() > 1) {
-//				// TODO: consider multiple textures
-//				throw new IOException("material with multiple textures not supported");
-//			}
-			
-			for (CPointer<MTex> pmtex : mtexs) {
-				if (!pmtex.isNull()) {
-					Tex tex = pmtex.get().getTex().get();
-					BufferedImage image = getTexture(tex.getIma().get());
+		}
+		return material;
+	}
+	
+	
+	
+	
+	private void readNodes(Material mat, org.cakelab.oge.scene.Material material) throws IOException {
+		// TODO: this is all just for demonstration purposes
+		CPointer<bNodeTree> p_nodetree = mat.getNodetree();
+		if (p_nodetree != null && p_nodetree.get() != null) {
+			bNodeTree tree = p_nodetree.get();
+			ListBase nodes = tree.getNodes();
+			Iterator<bNode> it = BlenderListIterator.create(nodes.getFirst().cast(bNode.class));
+			while (it.hasNext()) {
+				bNode node = it.next();
+				int type = node.getType();
+				switch(type) {
+				case SH_NODE_TEX_IMAGE:
+					
+					Image ima = node.getId().cast(Image.class).get();
+					BufferedImage image = getTexture(ima);
 
 					int pixelFormat = GL11.GL_RGBA;
 					boolean flipped = true;
-
-					texture = new TextureImage(image, pixelFormat, flipped);
+					material.setColorTexture(new TextureImage(image, pixelFormat, flipped));
 					break;
+				case TEX_NODE_IMAGE:
+					ImageUser iuser = node.getStorage().cast(ImageUser.class).get();
+					break;
+				case SH_NODE_BSDF_PRINCIPLED:
+					CArrayFacade<Float> rgba = Nodes.getDefaultRGBAInput(node, "Emission");
+					if (rgba != null) {
+						float intensity = (rgba.get(0) + rgba.get(1) + rgba.get(2) + rgba.get(3))/4.0f;
+						material.setEmitterIntensity(intensity);
+					}
+					rgba = Nodes.getDefaultRGBAInput(node, "Base Color");
+					if (rgba != null) {
+						Vector4f basecolor = converter.convertColor(rgba.get(0), rgba.get(1), rgba.get(2), rgba.get(3));
+						material.setColor(basecolor);
+					}
+					
+					break;
+				default:
+					// currently we are not interested in any other nodes, because this is just a demo
+					// System.out.println("type: " + type);
 				}
 			}
 		}
-		return new org.cakelab.oge.scene.Material(basecolor, texture, emitter_intensity);
 	}
-	
+
 	private TriangleMesh createTriangleMesh(Mesh mesh, boolean withUv, boolean withNormals, boolean smooth) throws IOException {
 		int totpolies = mesh.getTotpoly();
 		MVert[] vertices = mesh.getMvert().toArray(mesh.getTotvert());

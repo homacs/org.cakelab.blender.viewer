@@ -47,8 +47,9 @@ public class BlenderViewer extends ApplicationBase {
 //		createFreeCam();
 		createHeadCam();
 //		String filename = "/media/homac/DATA/Graphics/2.7/Barrel/Barrel-Ready.blend";
-//		String filename = "examples/suzanne-scene.blend";
-		String filename = "examples/xyz-scene.blend";
+		String filename = "examples/suzanne-scene.blend";
+//		String filename = "examples/xyz-scene.blend";
+//		String filename = "examples/cube.blend";
 		loadScene(filename);
 
 //		scene = new TestScene(userMovement);

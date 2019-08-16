@@ -1,9 +1,8 @@
 package org.cakelab.blender.render.renderers.r2d;
 
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
+import static org.lwjgl.opengl.GL20.glUseProgram;
 
-
-import org.cakelab.oge.Camera;
 import org.cakelab.oge.Renderer;
 import org.cakelab.oge.app.ApplicationContext;
 import org.cakelab.oge.scene.VisualEntity;

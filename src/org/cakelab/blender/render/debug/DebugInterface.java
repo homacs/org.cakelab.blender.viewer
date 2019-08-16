@@ -1,6 +1,6 @@
 package org.cakelab.blender.render.debug;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_DEPTH;
 
 import java.io.IOException;
 
@@ -12,12 +12,10 @@ import org.cakelab.blender.render.debug.normals.NormalRenderer;
 import org.cakelab.oge.DebugView;
 import org.cakelab.oge.RenderEngine;
 import org.cakelab.oge.app.ApplicationContext;
-import org.cakelab.oge.module.Module;
 import org.cakelab.oge.scene.Scene;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.shader.GLException;
 import org.cakelab.oge.utils.GLAPIHelper;
-import org.cakelab.oge.utils.SingleProgramRendererBase;
 
 public class DebugInterface implements DebugView, RenderEngine {
 	private boolean visible;
