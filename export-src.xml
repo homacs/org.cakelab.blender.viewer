@@ -16,7 +16,7 @@
 	</target>
 	<target name="copy-resources" depends="init">
 		<copy todir="${workdir}">
-            <fileset dir="${repobasedir}/JavaBlendViewer">
+            <fileset dir="${repobasedir}/org.cakelab.blender.viewer">
             	<include name="src/**/*.java"/>
             	<include name="jb-examples/**/*.java"/>
             	<include name="gen/**/*.java"/>
@@ -27,18 +27,11 @@
 				<exclude name=".*"/>
 				<exclude name="*.xml"/>
             </fileset>
-            <fileset dir="${repobasedir}/org.cakelab.blender.io">
+            <fileset dir="${repobasedir}/org.cakelab.blender.dna">
             	<exclude name="src/org/cakelab/blender/doc/extract/**/*.java"/>
             	<include name="src/**/*"/>
             </fileset>
             <fileset dir="${repobasedir}/org.cakelab.json">
-            	<include name="src/**/*"/>
-            </fileset>
-            <fileset dir="${repobasedir}/org.cakelab.soapbox">
-	        	<include name="src/**/*"/>
-	        	<include name="lib/**/*"/>
-	        </fileset>
-            <fileset dir="${repobasedir}/AppBase">
             	<include name="src/**/*"/>
             </fileset>
 		</copy>
