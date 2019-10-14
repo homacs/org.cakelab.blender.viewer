@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.blender.utils.MainLib;
-import org.cakelab.blender.generator.typemap.Renaming;
 import org.cakelab.blender.io.BlenderFile;
 import org.cakelab.blender.io.FileVersionInfo;
 import org.cakelab.blender.io.block.Block;
@@ -20,6 +19,7 @@ import org.cakelab.blender.metac.CStruct;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CFacade;
 import org.cakelab.blender.nio.CPointer;
+import org.cakelab.blender.typemap.Renaming;
 import org.cakelab.json.JSONArray;
 import org.cakelab.json.JSONObject;
 import org.cakelab.json.codec.JSONCodec;
