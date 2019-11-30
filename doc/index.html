@@ -21,16 +21,22 @@ This is a collection of examples to demonstrate the use of
 
 <h2>Project Contents</h2>
 <ul>
-<li><code>gen</code>: Generated Java .Blend DNA lib for Blender v2.80.75 files.</li>
 <li><code>src</code>: Source code of the viewer application.</li>
-<li><code>jb-examples</code>: Some examples showing reading and writing of .blend files.</li>
-<li><code>resources</code>: Blender files and glsl shaders required by the demo application.</li>
+<li><code>jb-examples</code>: Some examples demonstrating reading and writing of .blend files.</li>
+<li><code>examples</code>: Example blender files to be displayed by the viewer.</li>
+<li><code>src-dna</code>: Source code of Java .Blend DNA API for Blender v2.81.16 files.</li>
+<li><code>src-io</code>: Source code of the blender I/O utils required by DNA API.</li>
+<li><code>src-soapbox</code>: Source code of a simple render engine (beta).</li>
+<li><code>resources</code>: GLSL shader programs used by soapbox.</li>
+<li><code>src-appbase</code>: Source code of utilities used by soapbox.</li>
+<li><code>src-json</code>: Source code of a JSON API.</li>
+<li><code>lib</code>: Libraries (JAR) of LWJGL and JOML.</li>
 </ul>
 
 <h2>Downloads</h2>
 <ul>
-<li><a href="${project.downloads.source}">source code (libs incl.)</a></li>
-<li><a href="https://github.com/homacs/org.cakelab.blender.viewer">github</a></li>
+<li><a href="${project.downloads.source}">source code</a> (all dependencies included)</li>
+<li><a href="https://github.com/homacs/org.cakelab.blender.viewer">github</a> (has dependencies, see there)</li>
 </ul>
 
 <h2>Import in Eclipse</h2>
@@ -41,11 +47,11 @@ This is a collection of examples to demonstrate the use of
 </ol>
 
 <h2>Java .Blend Viewer</h2>
-<b>Files: </b><code>src/*</code><br/>
-<b>Main Class: </b><code>org.cakelab.blender.BlenderViewer</code><br/>
+<b>Source code: </b><code>src/*</code><br/>
+<b>Main class: </b><code>org.cakelab.blender.BlenderViewer</code><br/>
 <p>
 The application reads a given Blender file and displays it. It will 
-start in a Debug View, which shows normals and camera orientation as 
+start in a debug view, which shows normals and camera orientation as 
 well as key-bindings (use F1-key to see regular view).
 </p>
 <p>

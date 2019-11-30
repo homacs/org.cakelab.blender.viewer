@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="package" name="Package Sources for JavaBlendViewer">
 	<target name="init">
-		<property name="version" value="0.0.1"/>
-		<property name="repobasedir" value="${user.home}/repos/svn/cakelab.org/playground"/>
+		<property name="version" value="0.0.3"/>
+		<property name="repobasedir" value="${user.home}/repos/git/cakelab.org/playground"/>
 		<property name="web.downloads" value="${user.home}/tmp/public_html/projects/JavaBlendViewer/downloads"/>
 		<property name="project.name" value="JavaBlendViewer"/>
 		<property name="file.name" value="${project.name}-src-${version}"/>
@@ -17,22 +17,45 @@
 	<target name="copy-resources" depends="init">
 		<copy todir="${workdir}">
             <fileset dir="${repobasedir}/org.cakelab.blender.viewer">
-            	<include name="src/**/*.java"/>
-            	<include name="jb-examples/**/*.java"/>
-            	<include name="gen/**/*.java"/>
+            	<include name="src/**/*"/>
+            	<include name="jb-examples/**/*"/>
+            	<include name="gen/**/*"/>
 				<include name="resources/**/*"/>
 				<include name="examples/**/*"/>
 				<include name="doc/**/*"/>
-				<include name="lib/**/*"/>
 				<exclude name=".*"/>
 				<exclude name="*.xml"/>
             </fileset>
-            <fileset dir="${repobasedir}/org.cakelab.blender.dna">
-            	<exclude name="src/org/cakelab/blender/doc/extract/**/*.java"/>
-            	<include name="src/**/*"/>
+		</copy>
+		<copy todir="${workdir}/src-dna">
+            <fileset dir="${repobasedir}/org.cakelab.blender.dna/src">
+            	<include name="**/*"/>
             </fileset>
-            <fileset dir="${repobasedir}/org.cakelab.json">
-            	<include name="src/**/*"/>
+		</copy>
+		<copy todir="${workdir}/src-io">
+            <fileset dir="${repobasedir}/org.cakelab.blender.io/src">
+            	<exclude name="org/cakelab/blender/doc/extract/**/*.java"/>
+            	<include name="**/*"/>
+            </fileset>
+		</copy>
+		<copy todir="${workdir}/src-soapbox">
+            <fileset dir="${repobasedir}/org.cakelab.soapbox/src">
+            	<include name="**/*"/>
+            </fileset>
+		</copy>
+		<copy todir="${workdir}">
+            <fileset dir="${repobasedir}/org.cakelab.soapbox">
+            	<include name="lib/**/*"/>
+            </fileset>
+		</copy>
+		<copy todir="${workdir}/src-appbase">
+            <fileset dir="${repobasedir}/org.cakelab.appbase/src">
+            	<include name="**/*"/>
+            </fileset>
+		</copy>
+		<copy todir="${workdir}/src-json">
+            <fileset dir="${repobasedir}/org.cakelab.json/src">
+            	<include name="**/*"/>
             </fileset>
 		</copy>
 	</target>
