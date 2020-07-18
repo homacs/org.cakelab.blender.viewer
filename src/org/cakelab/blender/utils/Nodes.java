@@ -24,6 +24,7 @@ import org.cakelab.blender.nio.CArrayFacade;
  *   Iterator<bNode> it = BlenderListIterator.create(nodes.getFirst().cast(bNode.class));
  * </pre>
  * The list is not ordered.
+ * 
  * Each node has a type (node.getType()) which corresponds to one in
  * {@link BKE_node}.
  * Each node in the list has input and output sockets.
@@ -35,12 +36,14 @@ import org.cakelab.blender.nio.CArrayFacade;
  * Sockets may be connected to each other (output->input) via 
  * {@link bNodeLink}s feeding the value of the output socket into the 
  * input socket.
+ * 
  * Input and output sockets have a default value, which will be used
  * if there is no connecting input link overriding it.
  * The default value, can be customised in Blender's GUI (node view, 
  * or material view). Examples for default values, usually customised, 
  * are the name of a texture file, or the base colour of a surface 
  * shader.
+ * 
  * The value of a socket has a specific data type corresponding to {@link SocketType.Type}, 
  * such as string, boolean, integer, or a four element vector with float type components 
  * to represent RGBA-values.
