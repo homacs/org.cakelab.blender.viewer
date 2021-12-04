@@ -47,7 +47,7 @@ public class BlenderViewer extends ApplicationBase {
 //		createFreeCam();
 		createHeadCam();
 		
-//		String filename = "examples/cube.blend";
+//		String filename = "examples/cube-new.blend";
 //		String filename = "examples/suzanne-scene.blend";
 		String filename = "examples/xyz-scene.blend";
 		
