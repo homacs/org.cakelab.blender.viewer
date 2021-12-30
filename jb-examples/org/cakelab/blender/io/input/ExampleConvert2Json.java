@@ -21,10 +21,11 @@ import org.cakelab.blender.nio.CFacade;
 import org.cakelab.blender.nio.CPointer;
 import org.cakelab.blender.typemap.Renaming;
 import org.cakelab.json.JSONArray;
+import org.cakelab.json.JSONException;
 import org.cakelab.json.JSONObject;
 import org.cakelab.json.codec.JSONCodec;
 import org.cakelab.json.codec.JSONCodecConfiguration;
-import org.cakelab.json.codec.JSONCodecException;
+import org.cakelab.json.codec.JSONModeller;
 
 
 
@@ -42,11 +43,12 @@ public class ExampleConvert2Json {
 
 	private static final String PACKAGE = "org.blender.dna";
 	private static JSONCodec codec;
+	private static JSONModeller modeller;
 	private static CMetaModel model;
 	private static BlenderFile blend;
 	private static BlockTable blockTable;
 
-	public static void main(String[] args) throws IOException, JSONCodecException {
+	public static void main(String[] args) throws IOException, JSONException {
 		File fBlend = new File("/tmp/copybuffer.blend");
 //		File fBlend = new File("resources/cube.blend");
 //		File fBlend = new File("resources/common-can+mat.blend");
@@ -60,7 +62,9 @@ public class ExampleConvert2Json {
 		
 		blockTable = blend.getBlockTable();
 		model = blend.getMetaModel();
-		codec = new JSONCodec(new JSONCodecConfiguration(false));
+		JSONCodecConfiguration cfg = new JSONCodecConfiguration().ignoreNull(false);
+		codec = new JSONCodec(cfg);
+		modeller = new JSONModeller(cfg);
 		
 		JSONObject json = new JSONObject();
 		JSONObject oHeader = createHeader(blend);
@@ -88,10 +92,10 @@ public class ExampleConvert2Json {
 		return oHeader;
 	}
 
-	private static void addBlock(JSONArray aBlocks, Block b) throws JSONCodecException, IOException {
+	private static void addBlock(JSONArray aBlocks, Block b) throws JSONException, IOException {
 		JSONObject oBlock = new JSONObject();
 		aBlocks.add(oBlock);
-		JSONObject header = (JSONObject) codec.encodeObjectJSON(b.header);
+		JSONObject header = (JSONObject) modeller.toJSON(b.header);
 		oBlock.put("header", header);
 		header.put("code", b.header.getCode().toString());
 		CStruct struct = model.getStruct(b.header.getSdnaIndex());
@@ -161,7 +165,7 @@ public class ExampleConvert2Json {
 		try {
 			assert(value != null);
 			if (isPrimitive(type)) {
-				return codec.encodeObjectJSON(value);
+				return modeller.toJSON(value);
 			} else if (value instanceof CArrayFacade){
 				CArrayFacade<?> carray = ((CArrayFacade<?>)value);
 				JSONArray array = new JSONArray();
@@ -203,7 +207,7 @@ public class ExampleConvert2Json {
 				}
 				return oStruct;
 			} else {
-				return codec.encodeObjectJSON(value);
+				return modeller.toJSON(value);
 			}
 		} catch (NullPointerException e) {
 			// caught when data from an address, that was assumed to 
