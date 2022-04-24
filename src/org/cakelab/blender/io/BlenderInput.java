@@ -519,31 +519,13 @@ public class BlenderInput {
 		if (withNormals) {
 			// TODO clean up normal calculation (*where* and what about smooth)
 			if (!smooth) {
-				// Blender stores only normals which are the average 
-				// of the normals of the adjacent polygons. But if we are not 
-				// using smooth shading, we want the normals perpendicular to 
-				// the plane spanned by the polygon's vertices.
-				
-				// calculating the normal of the polygon from 3 vertices:
-				//			vec3 ab = b - a;
-				//          vec3 ac = c - a;
-				//          vec3 normal = normalize(cross(ab, ac));
-				
-				MLoop loop = loops[loopStart + 0];
-				CArrayFacade<Float> a = vertices[loop.getV()].getCo();
-				loop = loops[loopStart + 1];
-				CArrayFacade<Float> b = vertices[loop.getV()].getCo();
-				loop = loops[loopStart + 2];
-				CArrayFacade<Float> c = vertices[loop.getV()].getCo();
-				
-				Vector3f ab = new Vector3f(b.get(0)-a.get(0), b.get(1)-a.get(1), b.get(2)-a.get(2));
-				Vector3f ac = new Vector3f(c.get(0)-a.get(0), c.get(1)-a.get(1), c.get(2)-a.get(2));
-				
-				normal = ab.cross(ac);
-				
-				converter.convertVector(normal);
-				normal.normalize();
+				normal = calcNormal(vertices, loops, loopStart);
+			} else {
+				// FIXME: calculate normal vectors of vertices from adjacent planes 
+				normal = calcNormal(vertices, loops, loopStart);
 			}
+			converter.convertVector(normal);
+			normal.normalize();
 		}
 		
 		
@@ -563,7 +545,7 @@ public class BlenderInput {
 			
 			if (loopsuv != null) {
 				//
-				// copy uv coords
+				// copy uv coords too
 				//
 				MLoopUV loopuv = loopsuv[loopStart + l];
 				
@@ -575,14 +557,11 @@ public class BlenderInput {
 
 			if (withNormals) {
 				if (smooth) {
-					// use Blender normals for smooth shading
-					CArrayFacade<Short> no = v.getNo();
-					len = no.length();
-					target[targetPos + 0] = no.get(0);
-					target[targetPos + 1] = no.get(1);
-					target[targetPos + 2] = no.get(2);
-					convertNormal(target, targetPos);
-					converter.convertVector(target, targetPos, 3);
+					// blender no longer provides pre calculated normal vectors ...
+					// FIXME: calculate normal vectors of vertices from adjacent planes 
+					target[targetPos + 0] = normal.x;
+					target[targetPos + 1] = normal.y;
+					target[targetPos + 2] = normal.z;
 					targetPos += len;
 				} else {
 					// copy our calculated normal vector for non-smooth shading
@@ -598,6 +577,27 @@ public class BlenderInput {
 
 
 	
+	private Vector3f calcNormal(MVert[] vertices, MLoop[] loops, int loopStart) throws IOException {
+		// Non-smoth shading: Calculate normals for each vertex of the polygon (triangle)
+		// perpendicular to the plane spanned by the polygon's vertices.
+		
+		// calculating the normal of the polygon from 3 vertices:
+		//			vec3 ab = b - a;
+		//          vec3 ac = c - a;
+		//          vec3 normal = normalize(cross(ab, ac));
+		MLoop loop = loops[loopStart + 0];
+		CArrayFacade<Float> a = vertices[loop.getV()].getCo();
+		loop = loops[loopStart + 1];
+		CArrayFacade<Float> b = vertices[loop.getV()].getCo();
+		loop = loops[loopStart + 2];
+		CArrayFacade<Float> c = vertices[loop.getV()].getCo();
+		
+		Vector3f ab = new Vector3f(b.get(0)-a.get(0), b.get(1)-a.get(1), b.get(2)-a.get(2));
+		Vector3f ac = new Vector3f(c.get(0)-a.get(0), c.get(1)-a.get(1), c.get(2)-a.get(2));
+		
+		return ab.cross(ac);
+	}
+
 	private void convertNormal(float[] in, int pos) {
 		// convert into range [-1 .. +1]
 		in[pos + 0] = in[pos + 0] * (1.0f / 32767.0f);
