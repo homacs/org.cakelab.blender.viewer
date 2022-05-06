@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="package" name="Package Sources for JavaBlendViewer">
 	<target name="init">
-		<property name="version" value="0.0.11"/>
-		<property name="repobasedir" value="${user.home}/repos/git/cakelab.org/playground"/>
+		<property name="version" value="dev"/>
 		<property name="web.downloads" value="${user.home}/tmp/public_html/projects/JavaBlendViewer/downloads"/>
-		<property name="project.name" value="JavaBlendViewer"/>
-		<property name="file.name" value="${project.name}-src-${version}"/>
-        <property name="workdir" value="${java.io.tmpdir}/${file.name}"/>
+		<property name="repobasedir" value="${basedir}/.."/>
+		<property name="project.name" value="org.cakelab.blender.viewer"/>
+		<property name="file.name" value="JavaBlendViewer-src-${version}"/>
+        <property name="workdir" value="${java.io.tmpdir}"/>
+        <property name="packdir" value="${workdir}/${file.name}"/>
 		<property name="zipfile" value="${web.downloads}/${file.name}.zip"/>
 		<delete failonerror="false" includeEmptyDirs="true">
 			<fileset dir="${workdir}"/>
@@ -15,8 +16,8 @@
         <mkdir dir="${workdir}"/>
 	</target>
 	<target name="copy-resources" depends="init">
-		<copy todir="${workdir}">
-            <fileset dir="${repobasedir}/org.cakelab.blender.viewer">
+		<copy todir="${packdir}">
+            <fileset dir="${repobasedir}/${project.name}">
             	<include name="src/**/*"/>
             	<include name="jb-examples/**/*"/>
             	<include name="gen/**/*"/>
@@ -25,35 +26,36 @@
 				<include name="doc/**/*"/>
 				<exclude name=".*"/>
 				<exclude name="*.xml"/>
+				<exclude name="projexp.cfg"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}/src-dna">
+		<copy todir="${packdir}/src-dna">
             <fileset dir="${repobasedir}/org.cakelab.blender.dna/src">
             	<include name="**/*"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}/src-io">
+		<copy todir="${packdir}/src-io">
             <fileset dir="${repobasedir}/org.cakelab.blender.io/src">
             	<exclude name="org/cakelab/blender/doc/extract/**/*.java"/>
             	<include name="**/*"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}/src-soapbox">
+		<copy todir="${packdir}/src-soapbox">
             <fileset dir="${repobasedir}/org.cakelab.soapbox/src">
             	<include name="**/*"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}">
+		<copy todir="${packdir}">
             <fileset dir="${repobasedir}/org.cakelab.soapbox">
             	<include name="lib/**/*"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}/src-appbase">
+		<copy todir="${packdir}/src-appbase">
             <fileset dir="${repobasedir}/org.cakelab.appbase/src">
             	<include name="**/*"/>
             </fileset>
 		</copy>
-		<copy todir="${workdir}/src-json">
+		<copy todir="${packdir}/src-json">
             <fileset dir="${repobasedir}/org.cakelab.json/src">
             	<include name="**/*"/>
             </fileset>
@@ -61,9 +63,10 @@
 	</target>
 	<target name="package" depends="init,copy-resources">
 		<zip destfile="${zipfile}" 
-			basedir="${java.io.tmpdir}"
+			basedir="${workdir}"
 			includes="${file.name}/**"
-			update="true">
+			update="true"
+			whenempty="fail">
 		</zip>
 	</target>
 </project>
