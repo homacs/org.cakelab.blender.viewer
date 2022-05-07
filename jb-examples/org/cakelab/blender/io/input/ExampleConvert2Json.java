@@ -19,7 +19,7 @@ import org.cakelab.blender.metac.CStruct;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CFacade;
 import org.cakelab.blender.nio.CPointer;
-import org.cakelab.blender.typemap.Renaming;
+import org.cakelab.blender.typemap.NameMapping;
 import org.cakelab.json.JSONArray;
 import org.cakelab.json.JSONException;
 import org.cakelab.json.JSONObject;
@@ -145,7 +145,7 @@ public class ExampleConvert2Json {
 		JSONObject oStruct = null;
 		
 		try {
-			Class<?> cStruct = Class.forName(PACKAGE + "." + Renaming.mapStruct2Class(struct.getSignature()));
+			Class<?> cStruct = Class.forName(PACKAGE + "." + NameMapping.mapStruct2Class(struct.getSignature()));
 			long address = b.header.getAddress() + index * struct.sizeof(blend.getEncoding().getAddressWidth());
 			Constructor<?> constructor = cStruct.getDeclaredConstructor(long.class, Block.class, BlockTable.class);
 			Object object = constructor.newInstance(address, b, blockTable);
