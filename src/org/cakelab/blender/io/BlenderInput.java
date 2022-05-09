@@ -1,7 +1,6 @@
 package org.cakelab.blender.io;
 
 import static org.blender.dna.constants.object.Constants.*;
-import static org.blender.dna.constants.mesh.Constants.*;
 import static org.blender.dna.constants.vfont.Constants.*;
 import static org.blender.dna.constants.BKE_node.*;
 import static org.blender.dna.constants.constraints.eBConstraint_Types.*;
@@ -21,6 +20,9 @@ import javax.imageio.ImageIO;
 import org.blender.dna.*;
 import org.blender.utils.MainLib;
 import org.cakelab.appbase.log.Log;
+import org.cakelab.blender.io.convert.ConvertBlender2OpenGL;
+import org.cakelab.blender.io.convert.CoordinateSystemConverter;
+import org.cakelab.blender.io.convert.mesh.MeshConverter;
 import org.cakelab.blender.nio.CArrayFacade;
 import org.cakelab.blender.nio.CPointer;
 import org.cakelab.blender.utils.*;
@@ -28,7 +30,6 @@ import org.cakelab.oge.scene.Pose;
 import org.cakelab.oge.scene.TextureImage;
 import org.cakelab.oge.scene.VisualEntity;
 import org.cakelab.oge.scene.VisualMeshEntity;
-import org.cakelab.soapbox.model.Mesh.FrontFaceVertexOrder;
 import org.cakelab.soapbox.model.TriangleMesh;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -44,6 +45,7 @@ public class BlenderInput {
 	private ArrayList<org.cakelab.oge.Camera> cameras = new ArrayList<org.cakelab.oge.Camera>();
 	private File file;
 	private CoordinateSystemConverter converter;
+	private MeshConverter mesher;
 	
 	private HashMap<Long, Pose> objects = new HashMap<Long, Pose>();
 	private HashMap<Long, ArrayList<Pose>> children = new HashMap<Long, ArrayList<Pose>>();
@@ -61,6 +63,7 @@ public class BlenderInput {
 		f.close();
 		
 		converter = new ConvertBlender2OpenGL();
+		mesher = new MeshConverter(converter);
 	}
 	
 	public ArrayList<org.cakelab.oge.Camera> getCameras() {
@@ -111,9 +114,12 @@ public class BlenderInput {
 				continue;
 			}
 			if ((ob.getLay() & selectedLayers) == 0) {
+				// skip objects without selected layers (i.e. invisible)
 				continue;
 			}
 			
+			String name = ob.getId().getName().asString();
+			System.err.println(name);
 			switch (ob.getType()) {
 			case OB_CAMERA:
 				cameras.add(loadCamera(ob));
@@ -167,7 +173,7 @@ public class BlenderInput {
 	}
 
 	private void registerChild(BlenderObject parent, Pose ob) throws IOException {
-		ArrayList<Pose> list = children.get(parent);
+		ArrayList<Pose> list = children.get(parent.__io__addressof().getAddress());
 		if (list == null) {
 			list = new ArrayList<Pose>();
 			children.put(parent.__io__addressof().getAddress(), list);
@@ -355,10 +361,10 @@ public class BlenderInput {
 			//
 			// get polygons with associated uv coordinates
 			//
-			triangles = createTriangleMesh(mesh, true, withNormals, smooth);
+			triangles = mesher.createTriangleMesh(mesh, true, withNormals, smooth);
 
 		} else {
-			triangles = createTriangleMesh(mesh, false, withNormals, smooth);
+			triangles = mesher.createTriangleMesh(mesh, false, withNormals, smooth);
 		}
 		return new VisualMeshEntity(triangles, material);
 	}
@@ -449,162 +455,6 @@ public class BlenderInput {
 			}
 		}
 	}
-
-	private TriangleMesh createTriangleMesh(Mesh mesh, boolean withUv, boolean withNormals, boolean smooth) throws IOException {
-		int totpolies = mesh.getTotpoly();
-		MVert[] vertices = mesh.getMvert().toArray(mesh.getTotvert());
-		MPoly[] polies = mesh.getMpoly().toArray(totpolies);
-		MLoop[] loops = mesh.getMloop().toArray(mesh.getTotloop());
-		MLoopUV[] loopsuv = withUv ? mesh.getMloopuv().toArray(mesh.getTotloop()) : null;
-		
-		return createTriangleMesh(totpolies, vertices, polies, loops, loopsuv, withNormals, smooth);
-	}
-
-	private TriangleMesh createTriangleMesh(int totpolies, MVert[] vertices, MPoly[] polies, MLoop[] loops, MLoopUV[] loopsuv, boolean withNormals, boolean smooth) throws IOException {
-		boolean withUV = (loopsuv != null && loopsuv.length != 0);
-		
-		final int COORDS_SIZE = 3;
-		final int UV_SIZE = 2;
-		final int NORMAL_SIZE = 3;
-		
-		// for each polygon N vertices with at least 3 coords for xyz
-		int vectorSize = COORDS_SIZE;
-		int uvOffset = 0;
-		int normalsOffset = 0;
-		if (withUV) {
-			uvOffset = vectorSize;
-			// and 2 coords for uv map, if available
-			vectorSize += UV_SIZE;
-		}
-		if (withNormals) {
-			normalsOffset = vectorSize;
-			// and 3 coords for the normal vector if available
-			vectorSize += NORMAL_SIZE;
-		}
-		
-		// TODO: calculate actual size for N (considering conversion of quads and ngons to triangles
-		int N = 8*3;
-		float[] coords = new float[totpolies * N * vectorSize];
-
-		// for each polygon
-		int arrayLength = 0;
-		for (int p = 0; p < totpolies; p++) {
-			MPoly poly = polies[p];
-			boolean poly_smooth = smooth || (poly.getFlag() & ME_SMOOTH) != 0;
-			// for each vertex of a face (loop)
-			int loff = poly.getLoopstart();
-			int nvertices = poly.getTotloop();
-			if (nvertices == 3) {
-				// loop is a triangle
-				arrayLength = copyVertices(coords, arrayLength, nvertices, loff, loops, loopsuv, vertices, withNormals, poly_smooth);
-			} else if (nvertices == 4) {
-				// loop is a quad
-				float[] quad = new float[4 * vectorSize];
-				copyVertices(quad, 0, nvertices, loff, loops, loopsuv, vertices, withNormals, poly_smooth);
-				arrayLength = converter.convertToTriangles(quad, 0, coords, arrayLength, vectorSize, 4);
-			} else {
-				// loop is polygon with nvertices>4
-				float[] verts = new float[nvertices * vectorSize];
-				copyVertices(verts, 0, nvertices, loff, loops, loopsuv, vertices, withNormals, poly_smooth);
-				arrayLength = converter.convertToTriangles(verts, 0, coords, arrayLength, vectorSize, nvertices);
-			}
-		}
-
-		TriangleMesh tris = new TriangleMesh(FrontFaceVertexOrder.CounterClockwise, vectorSize, coords, uvOffset, normalsOffset, arrayLength);
-		return tris;
-	}
-	
-	private int copyVertices(float[] target, int targetPos, int nvertices, int loopStart, MLoop[] loops, MLoopUV[] loopsuv, MVert[] vertices, boolean withNormals, boolean smooth) throws IOException {
-		Vector3f normal = null;
-		if (withNormals) {
-			// TODO clean up normal calculation (*where* and what about smooth)
-			if (!smooth) {
-				normal = calcNormal(vertices, loops, loopStart);
-			} else {
-				// FIXME: calculate normal vectors of vertices from adjacent planes 
-				normal = calcNormal(vertices, loops, loopStart);
-			}
-			converter.convertVector(normal);
-			normal.normalize();
-		}
-		
-		
-		for (int l = 0; l < nvertices; l++) {
-			//
-			// copy xyz coords
-			//
-			MLoop loop = loops[loopStart + l];
-			MVert v = vertices[loop.getV()];
-
-			CArrayFacade<Float> co = v.getCo();
-			int len = co.length();
-			co.toArray(target, targetPos, len);
-			converter.convertVector(target, targetPos, len);
-			targetPos += len;
-			
-			
-			if (loopsuv != null) {
-				//
-				// copy uv coords too
-				//
-				MLoopUV loopuv = loopsuv[loopStart + l];
-				
-				CArrayFacade<Float> uv = loopuv.getUv();
-				len = uv.length();
-				uv.toArray(target, targetPos, len);
-				targetPos += len;
-			}
-
-			if (withNormals) {
-				if (smooth) {
-					// blender no longer provides pre calculated normal vectors ...
-					// FIXME: calculate normal vectors of vertices from adjacent planes 
-					target[targetPos + 0] = normal.x;
-					target[targetPos + 1] = normal.y;
-					target[targetPos + 2] = normal.z;
-					targetPos += len;
-				} else {
-					// copy our calculated normal vector for non-smooth shading
-					target[targetPos + 0] = normal.x;
-					target[targetPos + 1] = normal.y;
-					target[targetPos + 2] = normal.z;
-					targetPos += 3;
-				}				
-			}
-		}
-		return targetPos;
-	}
-
-
-	
-	private Vector3f calcNormal(MVert[] vertices, MLoop[] loops, int loopStart) throws IOException {
-		// Non-smoth shading: Calculate normals for each vertex of the polygon (triangle)
-		// perpendicular to the plane spanned by the polygon's vertices.
-		
-		// calculating the normal of the polygon from 3 vertices:
-		//			vec3 ab = b - a;
-		//          vec3 ac = c - a;
-		//          vec3 normal = normalize(cross(ab, ac));
-		MLoop loop = loops[loopStart + 0];
-		CArrayFacade<Float> a = vertices[loop.getV()].getCo();
-		loop = loops[loopStart + 1];
-		CArrayFacade<Float> b = vertices[loop.getV()].getCo();
-		loop = loops[loopStart + 2];
-		CArrayFacade<Float> c = vertices[loop.getV()].getCo();
-		
-		Vector3f ab = new Vector3f(b.get(0)-a.get(0), b.get(1)-a.get(1), b.get(2)-a.get(2));
-		Vector3f ac = new Vector3f(c.get(0)-a.get(0), c.get(1)-a.get(1), c.get(2)-a.get(2));
-		
-		return ab.cross(ac);
-	}
-
-	private void convertNormal(float[] in, int pos) {
-		// convert into range [-1 .. +1]
-		in[pos + 0] = in[pos + 0] * (1.0f / 32767.0f);
-		in[pos + 1] = in[pos + 1] * (1.0f / 32767.0f);
-		in[pos + 2] = in[pos + 2] * (1.0f / 32767.0f);
-	}
-
 
 
 	private BufferedImage getTexture(Image image) throws IOException {

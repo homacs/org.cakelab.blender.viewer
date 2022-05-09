@@ -1,4 +1,4 @@
-package org.cakelab.blender.io;
+package org.cakelab.blender.io.convert;
 
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -58,26 +58,10 @@ public interface CoordinateSystemConverter {
 	 * @return Quaternion of the rotation in the target system.
 	 */
 	Quaternionf convertCameraOrientation(Vector3f forward, Vector3f up, float[] eulerRotation);
-
-	/**
-	 * Converts a given mesh with n-gons (polygons with n vertices each) into triangles 
-	 * appropriate for the target system. This includes conversion of all vertices 
-	 * into the new coordinate system.
-	 * 
-	 * @param source Array with vertices.
-	 * @param srcPos Starting position of the first vertex of the first polygon in the array 'source'.
-	 * @param target Target array which is properly sized to receive all converted polygons.
-	 * @param targetPos Position for the first vertex of the first polygon in the 'target' array.
-	 * @param vectorSize Number of components of a single vector (e.g. (x,y,z,w,r,g,b,a) = 8).
-	 * @param nvertices Number of vertices for a single polygon.
-	 * @return Method returns (targetPos+(countVertices*vectorSize)) where countVertices is the number of vertices written.
-	 */
-	int convertToTriangles(float[] source, int srcPos, float[] target, int targetPos, int vectorSize, int nvertices);
-
+	
 	Vector4f convertColor(float r, float g, float b, float alpha);
 
 	Vector4f convertColor(float r, float g, float b);
-
 
 
 

@@ -1,4 +1,4 @@
-package org.cakelab.blender.io;
+package org.cakelab.blender.io.convert;
 
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -8,7 +8,7 @@ import org.joml.Vector4f;
 
 public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 	/*
-	 * OpenGL and Blender use a right handed coordination system.
+	 * OpenGL and Blender use a right handed coordinate system.
 	 * 
 	 * OpenGL's, coordinate system has the following orientation:
 	 *    X-Axis points to the right,
@@ -119,7 +119,7 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		
 		Quaternionf rotation = new Quaternionf();
 		
-		rotation.mul(this.rotationTransform);
+		rotation.mul(rotationTransform);
 		rotation.rotateZ(array[2]);
 		rotation.rotateY(array[1]);
 		rotation.rotateX(array[0]);
@@ -128,57 +128,6 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		return rotation;
 	}
 
-
-
-	public int convertToTriangles(float[] source, int srcPos, float[] target, int targetPos, int vectorSize, int nvertices) {
-		// convert a polygon into a set of triangles
-		// Starting with the first 3 vertices for the first triangle
-		// proceed by taking the latter 2 vertices of the previous triangle and
-		// add the next vertex to build another triangle.
-		// FIXME: This method works for concave polygons only.
-		
-		int i, j, k; // indices of the vertices of one particular triangle
-		int front = 0, back = nvertices-1;
-		int ntriangles = nvertices -2;
-		
-		for (int t = 0; t < ntriangles; t++) {
-			if (t%2 == 0) {
-				i = front;
-				j = ++front;
-				k = back;
-			} else {
-				k = back;
-				j = --back;
-				i = front;
-			}
-			
-			targetPos = createTriangle(source, srcPos, i, j, k, target, targetPos, vectorSize);
-			
-		}
-		
-		return targetPos;
-	}
-
-	
-	/* **************************************************************** *
-	 *            Just helper methods below                             *
-	 * **************************************************************** */
-	
-	/** Copy the vertices i, j, k from source to target. Indices i,j and k 
-	 * are relative to the given offset srcPos. targetPos is the index for
-	 * the first vertex of the triangle in the target array. Method returns 
-	 * the next free position in the target array (i.e. targetPos + (3*vectorSize)).
-	 * */
-	private int createTriangle(float[] source, int srcPos, int i, int j,
-			int k, float[] target, int targetPos, int vectorSize) {
-		System.arraycopy(source, srcPos +i*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		System.arraycopy(source, srcPos +j*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		System.arraycopy(source, srcPos +k*vectorSize, target, targetPos, vectorSize);
-		targetPos += vectorSize;
-		return targetPos;
-	}
 
 	
 	private Vector4f getTmpVector4f(float[] array, int offset) {
