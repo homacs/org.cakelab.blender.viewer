@@ -114,12 +114,10 @@ public class BlenderInput {
 				continue;
 			}
 			if ((ob.getLay() & selectedLayers) == 0) {
-				// skip objects without selected layers (i.e. invisible)
+				// skip objects not in selected layers (i.e. invisible)
 				continue;
 			}
 			
-			String name = ob.getId().getName().asString();
-			System.err.println(name);
 			switch (ob.getType()) {
 			case OB_CAMERA:
 				cameras.add(loadCamera(ob));
@@ -301,7 +299,6 @@ public class BlenderInput {
 			pose.setScale(tmp[0], tmp[1], tmp[2]);
 		}
 		
-		
 	}
 
 	private VisualEntity loadMesh(BlenderObject ob) throws IOException {
@@ -344,9 +341,6 @@ public class BlenderInput {
 		}
 		throw new IOException("Object '" + objectName + "' not found");
 	}
-
-	
-	
 	
 	private VisualEntity createObject(BlenderObject ob, Mesh mesh) throws IOException {
 		TriangleMesh triangles;

@@ -26,7 +26,7 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 	 * coordinate system, we have to turn its orientation, so that Y points up, which is:
 	 *    1. rotate -90 around X
 	 *    2. and rotate -90 around Y
-	 * We transform all vectors (even vertices) by this rotation.
+	 * We transform all vectors by this rotation.
 	 * 
 	 * All other transformations, received from Blender, such as scale and rotate, 
 	 * and the camera orientation will be adjusted for the new coordinate system.
@@ -100,6 +100,7 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 
 	@Override
 	public Quaternionf convertCameraOrientation(Vector3f forward, Vector3f up, float[] eulerRotation) {
+		// TODO: this does not belong here
 		convertVector(forward);
 		convertVector(up);
 		return convertEulerRotation(eulerRotation, 0);
@@ -118,7 +119,7 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		// quaternion ready to be used in our coordinate system.
 		
 		Quaternionf rotation = new Quaternionf();
-		
+		// TODO: why not turn this into one transformation matrix?
 		rotation.mul(rotationTransform);
 		rotation.rotateZ(array[2]);
 		rotation.rotateY(array[1]);
@@ -157,17 +158,17 @@ public class ConvertBlender2OpenGL implements CoordinateSystemConverter {
 		array[offset + 2] = vec.z;
 		array[offset + 3] = vec.w;
 	}
-
-	
 	
 	
 	@Override
 	public Vector4f convertColor(float r, float g, float b, float a) {
+		// TODO: This belongs to color system conversion
 		return new Vector4f(r,g,b,a);
 	}
 
 	@Override
 	public Vector4f convertColor(float r, float g, float b) {
+		// TODO: This belongs to color system conversion
 		return new Vector4f(r,g,b,1.f);
 	}
 

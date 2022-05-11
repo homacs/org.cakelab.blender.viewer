@@ -16,7 +16,7 @@ public interface CoordinateSystemConverter {
 	 * @param vectorStart
 	 * @param len
 	 */
-	void convertVector(float[] array, int vectorStart, int len) ;
+	void convertVector(float[] array, int vectorStart, int len);
 
 	/**
 	 * Convert the given vector in-place.
@@ -36,7 +36,7 @@ public interface CoordinateSystemConverter {
 	 * @param scale Scale 
 	 * @param startIndex
 	 */
-	void convertScale(float[] scale, int startIndex) ;
+	void convertScale(float[] scale, int startIndex);
 
 	/**
 	 * Converts the Euler rotation given in the array 'rotation' starting at 'startIndex'. 
