@@ -74,7 +74,7 @@ public class BlenderInput {
 	 * Loads all objects, cameras and lights assigned to the given 
 	 * layers and converts them into a scene.
 	 * 
-	 * @param layers
+	 * @param layers Layers to be shown/active.
 	 * @return A scene object with all objects of the selected layers
 	 * @throws IOException
 	 */
@@ -83,7 +83,7 @@ public class BlenderInput {
 		int selectedLayers = 0;
 		final int MAX_LAYERS = 0xFFFFFF;
 		for (int l : layers) {
-			if (l > MAX_LAYERS || l < 0) throw new IllegalArgumentException("layers have a number starting from 0 upto " + MAX_LAYERS);
+			if (l > MAX_LAYERS || l < 0) throw new IllegalArgumentException("layers have a number between 0 and " + MAX_LAYERS);
 			selectedLayers |= 1<<l;
 		}
 		if (selectedLayers == 0) {
@@ -114,6 +114,7 @@ public class BlenderInput {
 				continue;
 			}
 			if ((ob.getLay() & selectedLayers) == 0) {
+				// TODO: Layers are deprecated?
 				// skip objects not in selected layers (i.e. invisible)
 				continue;
 			}
@@ -132,7 +133,7 @@ public class BlenderInput {
 				loadText(ob);
 				break;
 			default:
-				Log.warn("skipped object " + ob.getId().getName().asString() + " with  type " + ob.getType());
+				Log.warn("skipped object " + ob.getId().getName().asString() + " with unknown type " + ob.getType());
 				// TODO etc
 			}
 		}
@@ -309,8 +310,7 @@ public class BlenderInput {
 	}
 
 	
-	public VisualEntity loadFirstMesh() throws IOException {
-		// TODO should be loadFirstObject() not mesh
+	public VisualEntity loadFirstObject() throws IOException {
 		Mesh mesh = main.getMesh();
 		//
 		// Convert mesh and texture into opengl suitable format
@@ -344,22 +344,13 @@ public class BlenderInput {
 	
 	private VisualEntity createObject(BlenderObject ob, Mesh mesh) throws IOException {
 		TriangleMesh triangles;
-		boolean withNormals = true;
 		// TODO get smooth from material (maybe something to be decided by the renderer)
 		boolean smooth = false;
-		//
-		// retrieve texture(s) from material
-		//
-		org.cakelab.oge.scene.Material material = getMaterial(ob, mesh);
-		if (material.hasTextures()) {
-			//
-			// get polygons with associated uv coordinates
-			//
-			triangles = mesher.createTriangleMesh(mesh, true, withNormals, smooth);
+		boolean withNormals = true;
 
-		} else {
-			triangles = mesher.createTriangleMesh(mesh, false, withNormals, smooth);
-		}
+		org.cakelab.oge.scene.Material material = getMaterial(ob, mesh);
+		triangles = mesher.createTriangleMesh(mesh, material.hasTextures(), withNormals, smooth);
+		
 		return new VisualMeshEntity(triangles, material);
 	}
 
@@ -420,7 +411,7 @@ public class BlenderInput {
 				case SH_NODE_TEX_IMAGE:
 					
 					Image ima = node.getId().cast(Image.class).get();
-					BufferedImage image = getTexture(ima);
+					BufferedImage image = getImage(ima);
 
 					int pixelFormat = GL11.GL_RGBA;
 					boolean flipped = true;
@@ -451,7 +442,7 @@ public class BlenderInput {
 	}
 
 
-	private BufferedImage getTexture(Image image) throws IOException {
+	private BufferedImage getImage(Image image) throws IOException {
 		CPointer<ImagePackedFile> p_imagePackedFile = image.getPackedfiles().getFirst().cast(ImagePackedFile.class);
 		if (p_imagePackedFile.isValid()) {
 			ImagePackedFile imagePackedFile = p_imagePackedFile.get();
