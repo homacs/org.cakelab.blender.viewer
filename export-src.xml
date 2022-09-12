@@ -36,7 +36,6 @@
 		</copy>
 		<copy todir="${packdir}/src-io">
             <fileset dir="${repobasedir}/org.cakelab.blender.io/src">
-            	<exclude name="org/cakelab/blender/doc/extract/**/*.java"/>
             	<include name="**/*"/>
             </fileset>
 		</copy>
