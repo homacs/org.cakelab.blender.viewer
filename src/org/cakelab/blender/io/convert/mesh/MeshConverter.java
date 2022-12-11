@@ -32,6 +32,7 @@ public class MeshConverter {
 	/** vector components per normal vector */
 	private static final int NORMAL_SIZE = COORDS_SIZE;
 
+
 	private final CoordinateSystemConverter converter;
 	private final Triangulator triangulator = new Triangulator();
 	private final BlenderVertexInput in;
@@ -66,11 +67,11 @@ public class MeshConverter {
 
 	private void setup(Mesh mesh, boolean withUv, boolean withNormals) throws IOException {
 		this.withNormals = withNormals;
-		int totpolies = mesh.getTotpoly();
-		vertices = mesh.getMvert().toArray(mesh.getTotvert());
-		polies = mesh.getMpoly().toArray(totpolies);
-		loops = mesh.getMloop().toArray(mesh.getTotloop());
-		MLoopUV[] loopsuv = withUv ? mesh.getMloopuv().toArray(mesh.getTotloop()) : null;
+
+		vertices = CustomDataHelper.getMvert(mesh);
+		polies = CustomDataHelper.getMPoly(mesh);
+		loops = CustomDataHelper.getMloop(mesh);
+		MLoopUV[] loopsuv = withUv ? CustomDataHelper.getLoopUv(mesh) : null;
 		boolean withUV = (loopsuv != null && loopsuv.length != 0);
 
 		setupSliceOffsets(withUV, withNormals);
@@ -83,6 +84,7 @@ public class MeshConverter {
 		in.init();
 		out.init(vertices, loops, loopsuv, withUV, withNormals, vertexIds, adjacentPolies, sliceLength);
 	}
+
 
 	private void setupSliceOffsets(boolean withUV, boolean withNormals) {
 		// for each polygon N vertices with at least 3 coords for xyz
